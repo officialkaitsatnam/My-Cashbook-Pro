@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b49b8">
+  <link rel="manifest" href="manifest.json">
   <title>My Cashbook — Smart Money & Udhaar Ledger</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -875,8 +876,10 @@
       populateCategoryDatalist(); renderUdhaarKhata();
       var month = ensureCurrentMonthSelected();
       setHtml("tableBody", "<tr><td colspan='8' class='text-center py-4 text-muted'><i class='fa-solid fa-spinner fa-spin me-2'></i> Loading sheet data...</td></tr>");
-      if (!window.google || !google.script || !google.script.run) {
-        setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>Apps Script Web App URL se open karein.</td></tr>");
+      var hasGasHost = Boolean(window.google && google.script && google.script.run);
+      var hasGasUrl = Boolean(getConfiguredGasUrl());
+      if (!hasGasHost && !hasGasUrl) {
+        setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>Apps Script Web App URL set nahi hai. Top bar ke Link icon par click karke URL dalein.</td></tr>");
         return;
       }
       runBackend("getDashboardData", [month], function(data) {
@@ -1154,7 +1157,7 @@
       updateUdhaarQueueButtonState();
       udhaarSaveQueue = udhaarSaveQueue.then(function() {
         return new Promise(function(resolve) {
-          if (!window.google || !google.script || !google.script.run) { resolve(); return; }
+          var hasBackend = Boolean((window.google && google.script && google.script.run) || getConfiguredGasUrl()); if (!hasBackend) { resolve(); return; }
           taskFn(function() { resolve(); });
         });
       }).finally(function() {
@@ -1165,7 +1168,7 @@
     }
 
     function syncUdhaarFromCloud(toast) {
-      if (!window.google || !google.script || !google.script.run || udhaarPendingCount > 0) return;
+      var hasBackend = Boolean((window.google && google.script && google.script.run) || getConfiguredGasUrl()); if (!hasBackend || udhaarPendingCount > 0) return;
       runBackend("getUdhaarEntries", [""], function(res) {
         if (res && res.ok && Array.isArray(res.entries) && udhaarPendingCount === 0) {
           writeUdhaarList(res.entries);
@@ -1336,13 +1339,13 @@
     var GAS_URL_STORAGE_KEY = "cashbook_gas_web_app_url_v1";
 
     function getConfiguredGasUrl() {
-      if (GAS_WEB_APP_URL && GAS_WEB_APP_URL.trim().indexOf("https://script.google.com/") === 0) {
-        return GAS_WEB_APP_URL.trim();
-      }
       try {
         var saved = (localStorage.getItem(GAS_URL_STORAGE_KEY) || "").trim();
         if (saved.indexOf("https://script.google.com/") === 0) return saved;
       } catch (e) {}
+      if (GAS_WEB_APP_URL && GAS_WEB_APP_URL.trim().indexOf("https://script.google.com/") === 0) {
+        return GAS_WEB_APP_URL.trim();
+      }
       return "";
     }
 
@@ -1369,7 +1372,7 @@
         if (finished) return;
         finished = true;
         cleanup();
-        if (typeof onFailure === "function") onFailure(new Error("Apps Script response timeout. Check Web App deployment access (Anyone)."));
+        if (typeof onFailure === "function") onFailure(new Error("Apps Script timeout. Check Web App deployment (Anyone) & New Version."));
       }, 20000);
 
       function cleanup() {
@@ -1389,7 +1392,7 @@
         if (finished) return;
         finished = true;
         cleanup();
-        if (typeof onFailure === "function") onFailure(new Error("Network/Script load error while calling Apps Script."));
+        if (typeof onFailure === "function") onFailure(new Error("Apps Script connection error. Verify Code.gs is deployed as Web App (Anyone)."));
       };
 
       var q = ["action=" + encodeURIComponent(action), "callback=" + encodeURIComponent(cbName), "_t=" + Date.now()];

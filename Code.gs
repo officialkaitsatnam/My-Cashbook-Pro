@@ -1,4 +1,4 @@
-﻿var SPREADSHEET_ID = "1QoFCw_nVuc7q-8SrChMsfYJ44bmhe8T6kZc81NuRMQM";
+var SPREADSHEET_ID = "1QoFCw_nVuc7q-8SrChMsfYJ44bmhe8T6kZc81NuRMQM";
 var UDHAAR_SHEET_NAME = "Udhaar_Khata";
 
 var MONTH_NAMES_FULL = [
