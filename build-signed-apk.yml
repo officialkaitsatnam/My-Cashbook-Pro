@@ -1,4 +1,4 @@
-name: Build Signed APK
+name: Auto Build Signed Release APK
 
 on:
   push:
@@ -33,23 +33,24 @@ jobs:
         run: |
           npx capacitor-assets generate --android --iconBackgroundColor '#0d42ad' --splashBackgroundColor '#0d42ad'
 
-      - name: Decode Signing Keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Auto-Generate Release Keystore
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/mycashbook-release.jks
+          keytool -genkeypair -v -keystore android/app/auto-release.jks \
+            -keyalg RSA -keysize 2048 -validity 10000 -alias mycashbook \
+            -storepass Cashbook@2026 -keypass Cashbook@2026 \
+            -dname "CN=MyCashbook Pro, OU=App, O=MyCashbook, L=India, S=HR, C=IN"
 
-      - name: Configure Signing & R8 Speed Optimization
+      - name: Enable Signing & R8 Speed Optimization
         run: |
           cat << 'EOF' >> android/app/build.gradle
 
           android {
               signingConfigs {
                   release {
-                      storeFile file("mycashbook-release.jks")
-                      storePassword System.getenv("KEYSTORE_PASSWORD")
-                      keyAlias System.getenv("KEY_ALIAS")
-                      keyPassword System.getenv("KEY_PASSWORD")
+                      storeFile file("auto-release.jks")
+                      storePassword "Cashbook@2026"
+                      keyAlias "mycashbook"
+                      keyPassword "Cashbook@2026"
                   }
               }
               buildTypes {
@@ -64,10 +65,6 @@ jobs:
           EOF
 
       - name: Build Signed Release APK
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
           chmod +x gradlew

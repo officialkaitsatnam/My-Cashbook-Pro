@@ -76,10 +76,10 @@
 <body>
 <div class="container">
 
-  <!-- AUTH SYSTEM: LOGIN (PIN OR PASSWORD) & CREATE ACCOUNT (WITH PIN) -->
+  <!-- SIGN IN / REGISTER SYSTEM (PIN + PASSWORD) -->
   <div id="authSection" class="auth-wrap">
 
-    <!-- Login Card -->
+    <!-- Sign In Card -->
     <div id="loginCard" class="card">
       <div class="brand-head">
         <div class="wallet-icon">
@@ -93,8 +93,8 @@
         <div class="brand-sub">Manage your money smartly</div>
       </div>
 
-      <h2>Welcome Back!</h2>
-      <div class="sub">Login to your account via PIN or Password</div>
+      <h2>Sign In</h2>
+      <div class="sub">Sign in using your PIN or Password</div>
 
       <div id="pinLoginBox">
         <div class="field">
@@ -102,7 +102,7 @@
           <input type="password" id="loginPin" inputmode="numeric" maxlength="6" placeholder="Enter your PIN" />
         </div>
         <div style="text-align:right; margin:-4px 0 12px;">
-          <button type="button" class="link-btn" onclick="setLoginMethod('password')">Login with Password</button>
+          <button type="button" class="link-btn" onclick="setLoginMethod('password')">Sign in with Password</button>
         </div>
         <button type="button" class="btn" onclick="loginPin()">Unlock with PIN</button>
       </div>
@@ -117,19 +117,19 @@
           <input type="password" id="loginPassword" placeholder="Enter your password" />
         </div>
         <div style="text-align:right; margin:-4px 0 12px;">
-          <button type="button" class="link-btn" onclick="setLoginMethod('pin')">Login with PIN instead</button>
+          <button type="button" class="link-btn" onclick="setLoginMethod('pin')">Sign in with PIN instead</button>
         </div>
-        <button type="button" class="btn" onclick="loginPassword()">Login</button>
+        <button type="button" class="btn" onclick="loginPassword()">Sign In</button>
       </div>
 
       <div class="auth-footer">
-        New user? <button type="button" class="link-btn" onclick="showAuth('signup')">Create Account</button>
+        New user? <button type="button" class="link-btn" onclick="showAuth('signup')">Register Account</button>
       </div>
     </div>
 
-    <!-- Signup Card (Creates Account + PIN) -->
+    <!-- Register Card (Creates Account + PIN) -->
     <div id="signupCard" class="card hidden">
-      <h2>Create Account</h2>
+      <h2>Register Account</h2>
       <div class="sub">Register to start using your Cashbook</div>
 
       <div class="field">
@@ -159,9 +159,9 @@
         </div>
       </div>
 
-      <button type="button" class="btn" onclick="registerUser()">Create Account</button>
+      <button type="button" class="btn" onclick="registerUser()">Register</button>
       <div class="auth-footer">
-        Already have an account? <button type="button" class="link-btn" onclick="showAuth('login')">Login</button>
+        Already registered? <button type="button" class="link-btn" onclick="showAuth('login')">Sign In</button>
       </div>
     </div>
 
@@ -272,7 +272,7 @@
 </div>
 
 <script>
-  const STORE_KEY = "mycashbook_pro_v2";
+  const STORE_KEY = "mycashbook_pro_v4";
   let store = JSON.parse(localStorage.getItem(STORE_KEY) || "null") || {
     user: null,
     activeMonth: new Date().toISOString().slice(0, 7),
@@ -315,7 +315,7 @@
   function loginPin() {
     const pin = document.getElementById("loginPin").value.trim();
     if (!store.user) {
-      alert("Account not found. Please create an account first.");
+      alert("Account not found. Please register first.");
       return showAuth("signup");
     }
     if (pin !== store.user.pin) return alert("Wrong PIN.");
@@ -327,7 +327,7 @@
     const email = document.getElementById("loginEmail").value.trim().toLowerCase();
     const password = document.getElementById("loginPassword").value;
     if (!store.user) {
-      alert("Account not found. Please create an account first.");
+      alert("Account not found. Please register first.");
       return showAuth("signup");
     }
     if (email !== store.user.email || password !== store.user.password) return alert("Wrong Email or Password.");
