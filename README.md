@@ -1,16 +1,27 @@
-# My Cashbook Pro v2 — APK Install, Account + Email OTP + Login with Pic + User Profile
+# MyCashbook Pro — GitHub Actions Signed APK Setup
 
-## Is ZIP mein kya hai:
-1. `Code.gs` -> Google Apps Script mein paste karke **New Version** deploy karein
-2. `index.html` -> GitHub repository (`officialkaitsatnam/My-Cashbook-Pro`) ke root mein upload karein
-3. `manifest.json` -> GitHub repository ke root mein upload karein
-4. `icons/icon-192.png` aur `icons/icon-512.png` -> GitHub repository mein `icons/` folder ke andar upload karein
+## Folder Structure
+- `www/index.html` — Fast offline-first Cashbook & Udhar Khata app (PIN + Password login, Signup with PIN, Monthly tabs, Carry-forward, Last 5 compact view, Hindi entries, Popup Edit, Excel export, Portrait print).
+- `assets/icon.png` — Place your `1024x1024` app icon image here (the MyCashbook Pro icon).
+- `.github/workflows/build-signed-apk.yml` — Automatically injects your icon, enables R8/ProGuard speed optimization (`minifyEnabled true`, `shrinkResources true`), signs the APK, and gives you a downloadable `app-release.apk`.
 
----
+## Step 1: Generate Your Signing Keystore (One-Time)
+Run this command on your PC/Termux to create `release-key.jks`:
+```bash
+keytool -genkey -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mycashbook
+```
+Convert `release-key.jks` to Base64 text:
+```bash
+base64 -w 0 release-key.jks > keystore_base64.txt
+```
 
-## Naye Features:
-1. **Install APK / App Option:** Header mein **Install APK** button aur phone browser prompt se app home screen par full-screen install hota hai.
-2. **Phone Layout Fix (No Empty Space):** Mobile/phone screen par tight spacing aur full-width responsive cards set kiye gaye hain.
-3. **Professional App Icon:** Naya high-resolution Rupee + growth badge app icon (`icons/icon-192.png` & `icons/icon-512.png`) add kiya gaya hai.
-4. **Account Create, Login & Forgot Password via Email OTP:** Naya account banayein, email/password se login karein, aur bhool jaane par **Forgot OTP** se email par 6-digit OTP mangwa kar naya password set karein.
-5. **Login with Pic & User Name/Details:** Photo se login karein aur user ka name, phone, work/shop, address & profile photo save/edit karein.
+## Step 2: Add 4 Secrets in Your GitHub Repository
+Go to **GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret** and add:
+1. `KEYSTORE_BASE64` — Paste the full text from `keystore_base64.txt`
+2. `KEYSTORE_PASSWORD` — Password you set for the keystore
+3. `KEY_ALIAS` — `mycashbook`
+4. `KEY_PASSWORD` — Key password
+
+## Step 3: Upload Files & Download Signed APK
+1. Upload `www/index.html`, `package.json`, `capacitor.config.json`, `.github/workflows/build-signed-apk.yml`, and put your icon image at `assets/icon.png`.
+2. Go to the **Actions** tab in GitHub -> **Build Signed Release APK** -> Download **MyCashbook-Pro-Signed-Release-APK**.
