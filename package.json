@@ -1,11 +1,14 @@
 {
   "name": "mycashbook-pro",
   "version": "1.0.0",
-  "private": true,
+  "description": "MyCashbook Pro Android APK via Capacitor & GitHub Actions",
+  "scripts": {
+    "build": "echo 'Static web assets ready'"
+  },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
-    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.0.0",
-    "@capacitor/core": "^6.0.0"
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/assets": "^3.0.5"
   }
 }
