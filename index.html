@@ -1,521 +1,1468 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MyCashbook Pro</title>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b49b8">
+  <link rel="manifest" href="manifest.json">
+  <title>My Cashbook — Smart Money & Udhaar Ledger</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --primary: #111827;
-      --accent: #1d4ed8;
-      --green: #15803d;
-      --red: #b91c1c;
-      --border: #e5e7eb;
+    :root { --bg-canvas: #edf3fb; --surface: #ffffff; --ink-main: #0f172a; }
+    body { background: linear-gradient(135deg, #e7effa 0%, #f4f8fd 50%, #e4eefb 100%); font-family: "Segoe UI", "Nirmala UI", system-ui, sans-serif; color: var(--ink-main); margin: 0; padding: 0; min-height: 100vh; }
+    body.dark-mode { background: #070e1a; color: #f8fafc; }
+    body.dark-mode .side-rail, body.dark-mode .kpi-box, body.dark-mode .ledger-card, body.dark-mode .card, body.dark-mode .mobile-dock { background: #111c2e !important; color: #f8fafc !important; border-color: rgba(148, 163, 184, 0.16) !important; }
+    body.dark-mode .search-pill, body.dark-mode .form-control, body.dark-mode .form-select, body.dark-mode .input-group-text, body.dark-mode .range-pill-btn, body.dark-mode .filter-pill-btn { background: #1a283e !important; color: #f8fafc !important; border-color: #334155 !important; }
+    body.dark-mode .table { color: #f8fafc; }
+    body.dark-mode .modal-content .bg-light { background-color: #0c1424 !important; color: #f8fafc; }
+
+    .app-shell { display: flex; min-height: 100vh; }
+    .side-rail { width: 156px; flex-shrink: 0; background: linear-gradient(180deg, #dce8f8 0%, #eef4fc 45%, #e3edf9 100%); border-right: 1px solid rgba(148, 163, 184, 0.25); padding: 16px 12px 20px; display: flex; flex-direction: column; justify-content: space-between; position: sticky; top: 0; height: 100vh; }
+    .side-wallet-logo { width: 66px; height: 58px; border-radius: 16px; background: linear-gradient(145deg, #0b49b8 0%, #2563eb 65%, #38bdf8 135%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; box-shadow: 0 10px 22px rgba(11, 73, 184, 0.28); border: 2px solid rgba(255, 255, 255, 0.75); }
+    .side-nav-btn { width: 100%; border: none; background: transparent; color: #1e293b; border-radius: 14px; padding: 9px 10px; margin-bottom: 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; }
+    .side-nav-btn:hover { background: rgba(255, 255, 255, 0.7); color: #0b49b8; }
+    .side-nav-btn.active { background: linear-gradient(135deg, #0945b0 0%, #1d74f5 100%); color: #ffffff; box-shadow: 0 8px 18px rgba(13, 84, 199, 0.28); }
+    .side-growth-caption { font-size: 13px; font-weight: 800; font-style: italic; text-align: center; line-height: 1.25; margin-top: 8px; }
+
+    .main-workspace { flex: 1; min-width: 0; padding: 16px 20px 36px; }
+    .top-ribbon { background: linear-gradient(105deg, #062a78 0%, #0b49b8 48%, #1574f2 82%, #e6effc 100%); border-radius: 18px; padding: 12px 20px; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 10px 24px rgba(11, 73, 184, 0.16); margin-bottom: 16px; }
+    .brand-title-gold { font-weight: 900; font-size: 1.9rem; line-height: 1; color: #ffd43b; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.28); }
+    .brand-subtitle-italic { font-size: 0.85rem; font-style: italic; font-weight: 600; color: rgba(255, 255, 255, 0.92); margin-top: 2px; }
+    .month-badge-select { background: rgba(6, 36, 96, 0.72) !important; color: #fff !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; border-radius: 10px !important; font-weight: 700; font-size: 13px; padding: 6px 12px !important; }
+    .header-icon-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.45); background: rgba(15, 23, 42, 0.25); color: #fff; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+
+    .kpi-box { border-radius: 18px; padding: 15px 18px; display: flex; align-items: center; gap: 14px; border: 1.5px solid #cbd5e1; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06); height: 100%; }
+    .kpi-credit { background: linear-gradient(135deg, #ffffff 0%, #effdf5 55%, #dcfce7 100%); border-color: #86efac; }
+    .kpi-debit { background: linear-gradient(135deg, #ffffff 0%, #fff1f2 55%, #ffe4e6 100%); border-color: #fda4af; }
+    .kpi-balance { background: linear-gradient(135deg, #ffffff 0%, #eff6ff 55%, #dbeafe 100%); border-color: #93c5fd; }
+    .kpi-circle-icon { width: 62px; height: 62px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; font-weight: 800; }
+    .icon-green { background: linear-gradient(145deg, #16a34a, #22c55e); }
+    .icon-red { background: linear-gradient(145deg, #dc2626, #ef4444); }
+    .icon-blue { background: linear-gradient(145deg, #0b49b8, #2563eb); }
+    .kpi-label { font-size: 13px; font-weight: 700; color: #334155; }
+    body.dark-mode .kpi-label { color: #cbd5e1; }
+    .kpi-amount { font-size: 23px; font-weight: 900; line-height: 1.15; }
+    .amt-green { color: #15803d; }
+    .amt-red { color: #dc2626; }
+    .amt-blue { color: #0b49b8; }
+
+    .search-pill { background: #fff; border: 1.5px solid #cbd5e1; border-radius: 999px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; }
+    .search-pill input { border: none; outline: none; background: transparent; width: 100%; font-size: 14px; color: inherit; }
+    .filter-pill-btn { background: #fff; border: 1.5px solid #93c5fd; color: #0b49b8; border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 14px; }
+    .range-pill-btn { background: #fff; border: 1.5px solid #cbd5e1; color: #1e293b; border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; width: 100%; }
+    .range-pill-btn.active-range { background: linear-gradient(135deg, #0b49b8, #2563eb); color: #fff; border-color: #0b49b8; }
+
+    .big-credit-btn { width: 100%; border: none; border-radius: 999px; padding: 13px 22px; background: linear-gradient(90deg, #15803d 0%, #22c55e 100%); color: #fff; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.25); }
+    .big-debit-btn { width: 100%; border: none; border-radius: 999px; padding: 13px 22px; background: linear-gradient(90deg, #b91c1c 0%, #ef4444 100%); color: #fff; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 20px rgba(220, 38, 38, 0.25); }
+    .btn-circle-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.25); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+
+    .ledger-card { background: #fff; border-radius: 20px; border: 1.5px solid #cbd5e1; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); overflow: hidden; }
+    .ledger-top-bar { background: linear-gradient(90deg, #062873 0%, #0b49b8 62%, #1a7cf5 100%); color: #fff; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .ledger-body-pad { padding: 14px 16px 18px; }
+    .latest-pill-badge { background: linear-gradient(90deg, #1d4ed8, #2563eb); color: #fff; font-weight: 700; font-size: 13px; padding: 6px 16px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+    .show-all-pill-btn { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; padding: 6px 16px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; }
+    .ledger-table thead th { background: linear-gradient(180deg, #0b2349 0%, #15366b 100%) !important; color: #fff !important; font-size: 13px; font-weight: 700; padding: 11px 10px; white-space: nowrap; }
+    .closing-tag { background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 6px; display: inline-block; margin-top: 2px; }
+    .bal-chip { background: #dbeafe; color: #1d4ed8; font-weight: 800; font-size: 13px; padding: 4px 10px; border-radius: 8px; display: inline-block; white-space: nowrap; }
+    .cat-pill { font-weight: 700; font-size: 12px; padding: 5px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .cat-income { background: #dcfce7; color: #15803d; }
+    .cat-business { background: #f3e8ff; color: #7e22ce; }
+    .cat-transport { background: #ffedd5; color: #c2410c; }
+    .cat-bills { background: #e0f2fe; color: #0369a1; }
+    .cat-general { background: #fef9c3; color: #a16207; }
+
+    .footer-ribbon { margin-top: 18px; background: linear-gradient(90deg, #062873 0%, #0b49b8 50%, #062873 100%); color: #fff; border-radius: 16px; padding: 9px 18px; text-align: center; font-size: 13px; font-weight: 700; }
+    .mobile-dock { display: none; }
+    #pinLockOverlay { position: fixed; inset: 0; z-index: 9999; background: #0f172a; color: #f8fafc; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .print-title { display: none; }
+
+    @media (max-width: 768px) {
+      .side-rail { display: none; }
+      .main-workspace { padding: 10px 10px 86px; }
+      .brand-title-gold { font-size: 1.45rem; }
+      .kpi-box { padding: 12px; gap: 10px; }
+      .kpi-circle-icon { width: 46px; height: 46px; font-size: 20px; }
+      .kpi-amount { font-size: 17px; }
+      .mobile-dock { display: flex; position: fixed; left: 10px; right: 10px; bottom: 8px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(10px); border: 1px solid #cbd5e1; border-radius: 20px; padding: 6px 10px; justify-content: space-around; align-items: center; z-index: 1040; }
+      .mobile-dock button { background: transparent; border: none; font-size: 11px; font-weight: 700; color: #334155; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+      body.dark-mode .mobile-dock button { color: #e2e8f0; }
     }
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Devanagari", sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
-    .container { max-width: 900px; margin: 0 auto; padding: 14px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-    .auth-wrap { max-width: 410px; margin: 20px auto; }
-    .brand-head { text-align: center; margin-bottom: 18px; }
-    .wallet-badge {
-      width: 44px; height: 44px; border-radius: 12px; background: #1d4ed8; color: #fff;
-      display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px;
-      box-shadow: 0 4px 12px rgba(29,78,216,0.28);
-    }
-    .brand-title { font-size: 26px; font-weight: 800; margin: 0; letter-spacing: -0.4px; }
-    .brand-sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
-    h2 { font-size: 20px; margin: 0 0 4px; }
-    .sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
-    .field { margin-bottom: 13px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #1f2937; }
-    input, select {
-      width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px;
-      font-size: 14px; background: #fff; outline: none; transition: border-color 0.15s;
-    }
-    input:focus, select:focus { border-color: var(--accent); }
-    .btn {
-      width: 100%; padding: 13px 16px; border: none; border-radius: 12px; font-weight: 700;
-      font-size: 14px; cursor: pointer; background: var(--primary); color: #fff;
-    }
-    .btn:active { opacity: 0.9; transform: scale(0.99); }
-    .btn-secondary { background: #eff6ff; color: var(--accent); }
-    .btn-sm { width: auto; padding: 7px 12px; font-size: 12px; border-radius: 9px; }
-    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
-    .auth-footer { text-align: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
-    .link-btn { background: none; border: none; color: var(--accent); font-weight: 600; cursor: pointer; padding: 0; font-size: 13px; }
-    .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
-    .tab { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 13px; white-space: nowrap; font-weight: 600; }
-    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .kpi { border: 1px solid var(--border); border-radius: 12px; padding: 11px; background: #f9fafb; }
-    .kpi span { font-size: 12px; color: var(--muted); }
-    .kpi .val { font-size: 17px; font-weight: 800; margin-top: 3px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 9px 7px; border-bottom: 1px solid var(--border); text-align: left; }
-    th { color: var(--muted); font-weight: 600; font-size: 12px; }
-    .hidden { display: none !important; }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
-    .modal-card { background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; }
-    .bar-chart { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
-    .bar-row { display: grid; grid-template-columns: 95px 1fr 75px; align-items: center; gap: 8px; font-size: 12px; }
-    .bar-track { height: 10px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 999px; transition: width 0.25s ease; }
+
+    /* Bank-Statement Print Layout: Single-line Description, Side-by-Side KPIs, Dense Single-Page Fit */
     @media print {
-      @page { size: portrait; margin: 10mm; }
-      .no-print { display: none !important; }
-      body { background: #fff; }
-      .card { box-shadow: none; border: 1px solid #ccc; }
+      @page { size: A4 portrait; margin: 6mm; }
+      body { background: #fff !important; font-size: 9px !important; line-height: 1.15 !important; color: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .side-rail, .top-ribbon, .search-pill, .filter-pill-btn, .range-pill-btn, .big-credit-btn, .big-debit-btn, .no-print, .mobile-dock, .footer-ribbon, #pinLockOverlay { display: none !important; }
+      .main-workspace { padding: 0 !important; width: 100% !important; }
+
+      .print-title {
+        display: block !important;
+        background: linear-gradient(90deg, #062873 0%, #0b49b8 100%) !important;
+        color: #ffffff !important;
+        border-radius: 7px;
+        padding: 6px 10px;
+        margin-bottom: 6px;
+      }
+      .print-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 3px;
+        margin-bottom: 3px;
+      }
+      .print-header-top h4 { font-size: 12px !important; margin: 0 !important; }
+      .print-header-sub {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 8.5px !important;
+        color: #e2e8f0 !important;
+      }
+
+      /* Force KPI cards side-by-side (left to right) in one compact horizontal row */
+      #statementSection > .row.g-3.mb-3,
+      #udhaarSection > .row.g-3.mb-3 {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        margin-bottom: 6px !important;
+      }
+      #statementSection > .row.g-3.mb-3 > [class*="col-"],
+      #udhaarSection > .row.g-3.mb-3 > [class*="col-"] {
+        flex: 1 1 0 !important;
+        width: 33.333% !important;
+        max-width: 33.333% !important;
+        padding: 0 !important;
+      }
+      .kpi-box {
+        padding: 5px 8px !important;
+        gap: 6px !important;
+        border-radius: 7px !important;
+        box-shadow: none !important;
+        border: 1px solid #94a3b8 !important;
+      }
+      .kpi-circle-icon {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 11px !important;
+      }
+      .kpi-label { font-size: 8.5px !important; }
+      .kpi-amount { font-size: 11px !important; }
+      .kpi-box .small { display: none !important; }
+
+      .ledger-card { box-shadow: none !important; border: 1px solid #64748b !important; border-radius: 7px !important; }
+      .ledger-top-bar { background: #0b2349 !important; padding: 5px 10px !important; }
+      .ledger-top-bar .fs-5 { font-size: 11px !important; }
+      .ledger-body-pad { padding: 5px 6px !important; }
+      .table-responsive { overflow: visible !important; }
+
+      .ledger-table {
+        width: 100% !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+      }
+      .ledger-table thead { display: table-header-group; }
+      .ledger-table tr { break-inside: avoid; page-break-inside: avoid; }
+      .ledger-table thead th {
+        background: #0b2349 !important;
+        color: #fff !important;
+        font-size: 8.5px !important;
+        padding: 3.5px 4px !important;
+        white-space: nowrap !important;
+      }
+      .ledger-table tbody td {
+        padding: 2.5px 4px !important;
+        font-size: 8.5px !important;
+        line-height: 1.15 !important;
+        border: 0.5px solid #cbd5e1 !important;
+      }
+
+      /* Column widths for crisp single-line Description & bank-statement layout */
+      .ledger-table th:nth-child(1), .ledger-table td:nth-child(1) { width: 5% !important; white-space: nowrap !important; }
+      .ledger-table th:nth-child(2), .ledger-table td:nth-child(2) { width: 14% !important; white-space: nowrap !important; }
+      .ledger-table th:nth-child(3), .ledger-table td:nth-child(3) { width: 15% !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+      .ledger-table th:nth-child(4), .ledger-table td:nth-child(4) { width: 33% !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+      .ledger-table th:nth-child(5), .ledger-table td:nth-child(5) { width: 11% !important; white-space: nowrap !important; }
+      .ledger-table th:nth-child(6), .ledger-table td:nth-child(6) { width: 10% !important; white-space: nowrap !important; }
+      .ledger-table th:nth-child(7), .ledger-table td:nth-child(7) { width: 12% !important; white-space: nowrap !important; }
+
+      .closing-tag { display: none !important; }
+      .bal-chip, .cat-pill {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+        background: transparent !important;
+        border: none !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+      }
+      .bal-chip { color: #0b49b8 !important; font-weight: 800 !important; }
     }
   </style>
 </head>
 <body>
-<div class="container">
+  <!-- 6-Digit PIN Lock & Professional Reset Overlay -->
+  <div id="pinLockOverlay">
+    <div class="card p-4 bg-dark text-white border border-secondary shadow-lg" style="width: 100%; max-width: 390px; border-radius: 18px;">
+      <div class="text-center mb-3">
+        <div class="mx-auto mb-2 rounded-circle bg-warning text-dark" style="width:52px;height:52px;font-size:22px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-shield-halved"></i></div>
+        <h5 class="fw-bold m-0">My Cashbook Locked</h5>
+        <p class="small text-secondary m-0 mt-1">Enter your 6-digit security PIN</p>
+      </div>
 
-  <!-- AUTH SCREENS (MATCHING UPLOADED CLEAN STYLE + PIN & PASSWORD) -->
-  <div id="authSection" class="auth-wrap">
+      <div id="unlockPinFormWrap">
+        <form onsubmit="handleUnlockPin(event)">
+          <div class="mb-3">
+            <input type="password" id="unlockPinInput" maxlength="6" pattern="\d{6}" inputmode="numeric" class="form-control form-control-lg text-center fw-bold" style="letter-spacing: 8px;" placeholder="••••••" required>
+          </div>
+          <div id="unlockPinError" class="text-danger small text-center mb-2" style="display:none;">Incorrect 6-digit PIN. Please try again.</div>
+          <button type="submit" class="btn btn-warning text-dark w-100 fw-bold py-2">Unlock Cashbook</button>
+          <div class="text-center mt-3">
+            <button type="button" class="btn btn-link text-info btn-sm text-decoration-none p-0" onclick="openForgotPinPanel()"><i class="fa-solid fa-rotate-left me-1"></i>Forgot PIN? Verify &amp; Reset</button>
+          </div>
+        </form>
+      </div>
 
-    <!-- 1. LOGIN SCREEN -->
-    <div id="loginCard" class="card">
-      <div class="brand-head">
-        <div class="wallet-badge" aria-hidden="true">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <rect x="2" y="5" width="20" height="14" rx="3"></rect>
-            <path d="M16 12h6"></path>
-            <circle cx="16" cy="12" r="1" fill="currentColor"></circle>
-          </svg>
+      <div id="forgotPinPanelWrap" style="display:none;">
+        <div class="p-3 rounded-3 bg-black bg-opacity-50 border border-secondary mb-3">
+          <div class="small fw-bold text-warning mb-1"><i class="fa-solid fa-key me-1"></i>Emergency PIN Reset</div>
+          <div class="small text-light">Confirm reset to clear the current 6-digit PIN and set a new PIN from inside Settings.</div>
         </div>
-        <h1 class="brand-title">Cashbook</h1>
-        <div class="brand-sub">Manage your money smartly</div>
-      </div>
-
-      <h2>Welcome Back!</h2>
-      <div class="sub">Login to your account via PIN or Password</div>
-
-      <!-- Fast PIN Login -->
-      <div id="pinModeBox">
-        <div class="field">
-          <label for="loginPin">Security PIN</label>
-          <input type="password" id="loginPin" inputmode="numeric" maxlength="6" placeholder="Enter your 4-6 digit PIN" />
+        <div class="mb-3">
+          <label class="form-label small text-secondary mb-1">Type <strong>RESET</strong> to confirm</label>
+          <input type="text" id="resetConfirmWordInput" class="form-control text-center fw-bold text-uppercase" placeholder="RESET">
+          <div id="resetConfirmError" class="text-danger small mt-1" style="display:none;">Please type RESET to confirm.</div>
         </div>
-        <div style="text-align:right; margin:-4px 0 12px;">
-          <button class="link-btn" onclick="switchLoginMode('password')">Login with Password instead</button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-light w-50 btn-sm py-2" onclick="closeForgotPinPanel()">Back</button>
+          <button type="button" class="btn btn-danger w-50 btn-sm py-2 fw-bold" onclick="handleConfirmedPinReset()">Reset PIN</button>
         </div>
-        <button class="btn" onclick="handlePinLogin()">Unlock with PIN</button>
-      </div>
-
-      <!-- Email + Password Login -->
-      <div id="passwordModeBox" class="hidden">
-        <div class="field">
-          <label for="loginEmail">Email Address</label>
-          <input type="email" id="loginEmail" placeholder="Enter your email" />
-        </div>
-        <div class="field">
-          <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" placeholder="Enter your password" />
-        </div>
-        <div style="text-align:right; margin:-4px 0 12px;">
-          <button class="link-btn" onclick="switchLoginMode('pin')">Use Quick PIN</button>
-        </div>
-        <button class="btn" onclick="handlePasswordLogin()">Login</button>
-      </div>
-
-      <div class="auth-footer">
-        New user? <button class="link-btn" onclick="showAuthView('signup')">Create Account</button>
-      </div>
-    </div>
-
-    <!-- 2. SIGNUP SCREEN (WITH PIN CREATION) -->
-    <div id="signupCard" class="card hidden">
-      <h2>Create Account</h2>
-      <div class="sub">Register to start using your Cashbook</div>
-
-      <div class="field">
-        <label for="signupName">Full Name</label>
-        <input type="text" id="signupName" placeholder="Enter your name" />
-      </div>
-      <div class="field">
-        <label for="signupEmail">Email Address</label>
-        <input type="email" id="signupEmail" placeholder="Enter your email" />
-      </div>
-      <div class="field">
-        <label for="signupPassword">Password</label>
-        <input type="password" id="signupPassword" placeholder="Create password" />
-      </div>
-      <div class="field">
-        <label for="signupConfirmPassword">Confirm Password</label>
-        <input type="password" id="signupConfirmPassword" placeholder="Confirm password" />
-      </div>
-      <div class="row">
-        <div class="field">
-          <label for="signupPin">Create Security PIN</label>
-          <input type="password" id="signupPin" inputmode="numeric" maxlength="6" placeholder="4-6 digit PIN" />
-        </div>
-        <div class="field">
-          <label for="signupConfirmPin">Confirm PIN</label>
-          <input type="password" id="signupConfirmPin" inputmode="numeric" maxlength="6" placeholder="Confirm PIN" />
-        </div>
-      </div>
-
-      <button class="btn" onclick="handleSignup()">Create Account</button>
-      <div class="auth-footer">
-        Already have an account? <button class="link-btn" onclick="showAuthView('login')">Login</button>
       </div>
     </div>
   </div>
 
-  <!-- MAIN CASHBOOK & UDHAR KHATA DASHBOARD -->
-  <div id="appSection" class="hidden">
-    <div class="card no-print">
-      <div class="toolbar">
+  <div class="app-shell">
+    <aside class="side-rail no-print">
+      <div>
+        <div class="side-wallet-logo"><i class="fa-solid fa-wallet"></i></div>
+        <button type="button" id="navHomeBtn" class="side-nav-btn active" onclick="switchView('STATEMENT', 'navHomeBtn')"><i class="fa-solid fa-house"></i><span>Home</span></button>
+        <button type="button" id="navReportsBtn" class="side-nav-btn" onclick="switchView('UDHAAR', 'navReportsBtn')"><i class="fa-solid fa-book-open"></i><span>Udhaar</span></button>
+        <button type="button" id="navAnalyticsBtn" class="side-nav-btn" onclick="openChartModal()"><i class="fa-solid fa-chart-pie"></i><span>Analytics</span></button>
+        <button type="button" id="navToolsBtn" class="side-nav-btn" onclick="openBudgetModal()"><i class="fa-solid fa-wrench"></i><span>Tools</span></button>
+        <button type="button" id="navSettingsBtn" class="side-nav-btn" onclick="openPinModal()"><i class="fa-solid fa-gear"></i><span>PIN Lock</span></button>
+      </div>
+      <div class="text-center">
+        <div class="fs-3 text-success"><i class="fa-solid fa-coins text-warning"></i> <i class="fa-solid fa-arrow-trend-up"></i></div>
+        <div class="side-growth-caption">Manage<br>Your Finance<br>Better...</div>
+      </div>
+    </aside>
+
+    <main class="main-workspace">
+      <div class="print-title">
+        <div class="print-header-top">
+          <div>
+            <h4 class="fw-bold m-0" style="color:#ffd43b;">MY CASHBOOK — ACCOUNT STATEMENT</h4>
+            <div style="color:#ffffff; font-size:9.5px;">Email: <strong>kaitsatnam@gmail.com</strong></div>
+          </div>
+          <div class="text-end">
+            <div id="printMonthSubtitle" class="fw-bold" style="color:#ffffff; font-size:9.5px;"></div>
+            <div id="printGeneratedAt" style="color:#dbeafe; font-size:8.5px;"></div>
+          </div>
+        </div>
+        <div class="print-header-sub">
+          <span>Smart Money &amp; Udhaar Ledger</span>
+          <span>Account: kaitsatnam@gmail.com</span>
+        </div>
+      </div>
+
+      <header class="top-ribbon no-print">
         <div>
-          <h2 id="welcomeTitle">MyCashbook Pro</h2>
-          <div class="sub" style="margin:0;">English labels • Hindi entries • Auto Monthly Carry-Forward</div>
+          <div class="brand-title-gold">My Cashbook</div>
+          <div class="brand-subtitle-italic">Track • Manage • Grow</div>
         </div>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="btn btn-sm btn-secondary" onclick="exportCSV()">Excel Export</button>
-          <button class="btn btn-sm btn-secondary" onclick="window.print()">Print Portrait</button>
-          <button class="btn btn-sm" onclick="lockApp()">Lock</button>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <input type="month" id="monthFilter" class="form-control form-control-sm month-badge-select w-auto" onchange="onMonthChange()">
+          <button type="button" class="header-icon-btn" onclick="toggleDarkMode()" title="Dark / Light Mode"><i class="fa-solid fa-moon" id="themeIcon"></i></button>
+          <button type="button" class="header-icon-btn" onclick="promptAndSaveGasUrl()" title="Connect Apps Script Web App URL"><i class="fa-solid fa-link"></i></button>
+          <button type="button" class="header-icon-btn" onclick="openPinModal()" title="6-Digit PIN Settings"><i class="fa-solid fa-key"></i></button>
+        </div>
+      </header>
+
+      <div id="alertBox" class="alert alert-success alert-dismissible fade show shadow-sm no-print" role="alert" style="display:none;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pe-4">
+          <span id="alertMsg"></span>
+          <button type="button" id="undoDeleteBtn" class="btn btn-sm btn-dark" onclick="handleUndoDelete()" style="display:none;"><i class="fa-solid fa-rotate-left me-1"></i> Undo Delete</button>
+        </div>
+        <button type="button" class="btn-close" onclick="hideAlert()"></button>
+      </div>
+
+      <div id="statementSection">
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-md-4"><div class="kpi-box kpi-credit"><div class="kpi-circle-icon icon-green">₹</div><div><div class="kpi-label">Total Credit</div><div id="totalCredit" class="kpi-amount amt-green">₹0.00</div><div class="small amt-green fw-bold mt-1"><i class="fa-solid fa-arrow-trend-up"></i> <span id="activeTabBadge">This Month</span></div></div></div></div>
+          <div class="col-12 col-md-4"><div class="kpi-box kpi-debit"><div class="kpi-circle-icon icon-red">₹</div><div><div class="kpi-label">Total Debit</div><div id="totalDebit" class="kpi-amount amt-red">₹0.00</div><div class="small amt-red fw-bold mt-1"><i class="fa-solid fa-arrow-trend-up"></i> This Month</div></div></div></div>
+          <div class="col-12 col-md-4"><div class="kpi-box kpi-balance"><div class="kpi-circle-icon icon-blue"><i class="fa-solid fa-scale-balanced"></i></div><div><div class="kpi-label">Closing Balance</div><div id="netBalance" class="kpi-amount amt-blue">₹0.00</div><div class="small text-primary fw-bold mt-1"><i class="fa-regular fa-calendar"></i> As on Date</div></div></div></div>
+        </div>
+
+        <div class="row g-2 align-items-center mb-2 no-print">
+          <div class="col-12 col-md-8"><div class="search-pill"><i class="fa-solid fa-magnifying-glass text-muted"></i><input type="text" id="searchInput" placeholder="Search here... (Party Name, Description, Hindi/English)" onkeyup="filterTable()"></div></div>
+          <div class="col-6 col-md-2"><select id="typeQuickSelect" class="form-select filter-pill-btn w-100" onchange="setQuickFilter(this.value)"><option value="ALL">All</option><option value="CREDIT">Credit (+)</option><option value="DEBIT">Debit (-)</option></select></div>
+          <div class="col-6 col-md-2"><button type="button" class="filter-pill-btn w-100" onclick="toggleDateRangeBar()"><i class="fa-solid fa-filter me-1"></i> Filter</button></div>
+        </div>
+
+        <div id="dateRangeBar" class="row g-2 mb-2 no-print" style="display:none;">
+          <div class="col-6 col-md-4"><div class="input-group input-group-sm"><span class="input-group-text">From</span><input type="date" id="fromDateFilter" class="form-control" onchange="filterTable()"></div></div>
+          <div class="col-6 col-md-4"><div class="input-group input-group-sm"><span class="input-group-text">To</span><input type="date" id="toDateFilter" class="form-control" onchange="filterTable()"></div></div>
+          <div class="col-12 col-md-4"><button type="button" class="btn btn-outline-secondary btn-sm w-100 rounded-pill" onclick="clearDateRangeFilter()">Reset Date Range</button></div>
+        </div>
+
+        <div class="row g-2 mb-3 no-print">
+          <div class="col-6 col-md-3"><button type="button" id="btnRangeMonth" class="range-pill-btn active-range" onclick="applyPresetRange('THIS_MONTH')"><i class="fa-regular fa-calendar me-1"></i> This Month</button></div>
+          <div class="col-6 col-md-3"><button type="button" id="btnRangeLastMonth" class="range-pill-btn" onclick="applyPresetRange('LAST_MONTH')"><i class="fa-regular fa-calendar-minus me-1"></i> Last Month</button></div>
+          <div class="col-6 col-md-3"><button type="button" id="btnRangeYear" class="range-pill-btn" onclick="applyPresetRange('THIS_YEAR')"><i class="fa-regular fa-calendar-check me-1"></i> This Year</button></div>
+          <div class="col-6 col-md-3"><button type="button" id="btnRangeCustom" class="range-pill-btn" onclick="toggleDateRangeBar()"><i class="fa-solid fa-calendar-days me-1"></i> Custom Range</button></div>
+        </div>
+
+        <div class="row g-3 mb-3 no-print">
+          <div class="col-12 col-md-6"><button type="button" class="big-credit-btn" onclick="openNewEntryModal('CREDIT')"><span class="d-flex align-items-center gap-2"><span class="btn-circle-icon"><i class="fa-solid fa-plus"></i></span><span>Add Credit (+)</span></span><span class="btn-circle-icon"><i class="fa-solid fa-chevron-right"></i></span></button></div>
+          <div class="col-12 col-md-6"><button type="button" class="big-debit-btn" onclick="openNewEntryModal('DEBIT')"><span class="d-flex align-items-center gap-2"><span class="btn-circle-icon"><i class="fa-solid fa-minus"></i></span><span>Add Debit (-)</span></span><span class="btn-circle-icon"><i class="fa-solid fa-chevron-right"></i></span></button></div>
+        </div>
+
+        <div class="ledger-card">
+          <div class="ledger-top-bar">
+            <div class="d-flex align-items-center gap-2 fw-bold fs-5"><i class="fa-solid fa-file-lines"></i><span>Cashbook Statement Ledger</span></div>
+            <div class="d-flex align-items-center gap-2 no-print">
+              <button type="button" id="excelBtn" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3" onclick="downloadFormattedExcel()"><i class="fa-solid fa-file-excel me-1"></i> Excel</button>
+              <button type="button" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3" onclick="printFullMonth()"><i class="fa-solid fa-print me-1"></i> Export / Print</button>
+            </div>
+          </div>
+
+          <div class="ledger-body-pad">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 no-print">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span id="recordCount" class="latest-pill-badge">Latest 0 of 0 Records</span>
+                <button type="button" id="toggleAllBtn" class="show-all-pill-btn" onclick="toggleShowAllEntries()" style="display:none;"><i class="fa-solid fa-eye text-primary"></i> Show All</button>
+              </div>
+              <small class="text-muted fw-semibold" id="ledgerMetaSummary">Today: ₹0.00 | Daily Avg: ₹0.00</small>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle ledger-table mb-0">
+                <thead>
+                  <tr>
+                    <th class="text-center" style="width:55px;">S.No.</th>
+                    <th style="width:130px;">Date &amp; Time</th>
+                    <th class="text-center" style="width:145px;">Category</th>
+                    <th>Description</th>
+                    <th class="text-end" style="width:115px;">Credit</th>
+                    <th class="text-end" style="width:115px;">Debit</th>
+                    <th class="text-end" style="width:125px;">Balance</th>
+                    <th class="text-center no-print" style="width:95px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody">
+                  <tr><td colspan="8" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i> Loading sheet data...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div id="monthTabs" class="tabs"></div>
+      <!-- UDHAAR KHATA SECTION -->
+      <div id="udhaarSection" style="display:none;">
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-md-4"><div class="kpi-box kpi-credit"><div class="kpi-circle-icon icon-green"><i class="fa-solid fa-hand-holding-dollar"></i></div><div><div class="kpi-label">Lena Hai / Given (+)</div><div id="udhaarLenaTotal" class="kpi-amount amt-green">₹0.00</div><div class="small amt-green fw-bold mt-1"><i class="fa-solid fa-arrow-trend-up"></i> Pending Receivable</div></div></div></div>
+          <div class="col-12 col-md-4"><div class="kpi-box kpi-debit"><div class="kpi-circle-icon icon-red"><i class="fa-solid fa-file-invoice-dollar"></i></div><div><div class="kpi-label">Dena Hai / Taken (-)</div><div id="udhaarDenaTotal" class="kpi-amount amt-red">₹0.00</div><div class="small amt-red fw-bold mt-1"><i class="fa-solid fa-arrow-trend-down"></i> Pending Payable</div></div></div></div>
+          <div class="col-12 col-md-4"><div class="kpi-box kpi-balance"><div class="kpi-circle-icon icon-blue"><i class="fa-solid fa-scale-balanced"></i></div><div><div class="kpi-label">Net Udhaar Balance</div><div id="udhaarNetTotal" class="kpi-amount amt-blue">₹0.00</div><div class="small text-primary fw-bold mt-1"><i class="fa-regular fa-calendar"></i> Tab: Udhaar_Khata</div></div></div></div>
+        </div>
 
-      <div class="row">
-        <div class="kpi"><span>Carry-Forward</span><div class="val" id="kpiCarry">₹0</div></div>
-        <div class="kpi"><span>Cash In</span><div class="val" style="color:var(--green);" id="kpiIn">₹0</div></div>
-        <div class="kpi"><span>Cash Out</span><div class="val" style="color:var(--red);" id="kpiOut">₹0</div></div>
-        <div class="kpi"><span>Net Udhar Khata</span><div class="val" style="color:var(--accent);" id="kpiUdhar">₹0</div></div>
-      </div>
-    </div>
+        <div class="ledger-card mb-3 no-print">
+          <div class="ledger-top-bar">
+            <div class="d-flex align-items-center gap-2 fw-bold fs-5"><i class="fa-solid fa-book-open"></i><span>Add Udhaar Entry — Udhaar Khata</span></div>
+            <button type="button" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3" onclick="syncUdhaarFromCloud(true)"><i class="fa-solid fa-arrows-rotate me-1"></i> Sync Sheet</button>
+          </div>
+          <div class="ledger-body-pad">
+            <form onsubmit="handleAddUdhaarEntry(event)" class="row g-2 align-items-end">
+              <div class="col-12 col-md-3"><label class="form-label small fw-bold mb-1">Party Name</label><input type="text" id="udhaarPartyInput" class="form-control" placeholder="e.g. Dharmpal / ग्राहक" required></div>
+              <div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">Type</label><select id="udhaarTypeInput" class="form-select"><option value="LENA">Lena Hai / Given (+)</option><option value="DENA">Dena Hai / Taken (-)</option></select></div>
+              <div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">Amount (₹)</label><input type="number" step="0.01" min="0.01" id="udhaarAmountInput" class="form-control fw-bold" placeholder="0.00" required></div>
+              <div class="col-12 col-md-3"><label class="form-label small fw-bold mb-1">Date &amp; Time</label><input type="datetime-local" id="udhaarDateTimeInput" class="form-control" required></div>
+              <div class="col-12 col-md-10"><label class="form-label small fw-bold mb-1">Note (Hindi / English)</label><input type="text" id="udhaarNoteInput" class="form-control" placeholder="e.g. Fasal / सामान" required></div>
+              <div class="col-12 col-md-2"><button type="submit" id="udhaarSaveBtn" class="btn btn-primary w-100 fw-bold rounded-pill py-2"><i class="fa-solid fa-plus me-1"></i> Add Entry</button></div>
+            </form>
+          </div>
+        </div>
 
-    <!-- Add Entry -->
-    <div class="card no-print">
-      <h2>Add Entry</h2>
-      <div class="row">
-        <div class="field">
-          <label for="entryDate">Date</label>
-          <input type="date" id="entryDate" />
-        </div>
-        <div class="field">
-          <label for="entryType">Type</label>
-          <select id="entryType">
-            <option value="CASH_IN">Cash In (आवक)</option>
-            <option value="CASH_OUT">Cash Out (खर्च)</option>
-            <option value="UDHAR_GIVEN">Udhar Given (उधार दिया)</option>
-            <option value="UDHAR_TAKEN">Udhar Taken (उधार लिया)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="entryAmount">Amount (₹)</label>
-          <input type="number" id="entryAmount" min="0" step="0.01" placeholder="0.00" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label for="entryParty">Party / Name (Hindi / English)</label>
-          <input type="text" id="entryParty" placeholder="उदा. रमेश / Customer Name" />
-        </div>
-        <div class="field">
-          <label for="entryNote">Remark (Hindi / English)</label>
-          <input type="text" id="entryNote" placeholder="उदा. बिल भुगतान / Note" />
+        <div class="ledger-card">
+          <div class="ledger-top-bar">
+            <div class="d-flex align-items-center gap-2 fw-bold fs-5"><i class="fa-solid fa-file-lines"></i><span>Udhaar Khata Ledger</span></div>
+            <span id="udhaarCountBadge" class="latest-pill-badge">0 Records</span>
+          </div>
+          <div class="ledger-body-pad">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle ledger-table mb-0">
+                <thead>
+                  <tr>
+                    <th class="text-center" style="width:55px;">S.No.</th>
+                    <th style="width:145px;">Entry Date &amp; Time</th>
+                    <th>Party Name</th>
+                    <th>Note</th>
+                    <th class="text-end" style="width:120px;">Amount</th>
+                    <th class="text-center" style="width:110px;">Type</th>
+                    <th class="text-center" style="width:110px;">Status</th>
+                    <th style="width:145px;">Settled Date &amp; Time</th>
+                    <th class="text-center no-print" style="width:130px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="udhaarTableBody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-      <button class="btn" onclick="addEntry()">Save Entry</button>
-    </div>
 
-    <!-- Compact Last 5 Entries Table -->
-    <div class="card">
-      <div class="toolbar">
-        <h2 id="listHeading" style="margin:0;">Recent Entries (Last 5)</h2>
-        <div class="no-print" style="display:flex; gap:6px;">
-          <select id="filterType" onchange="renderDashboard()" style="width:auto; padding:6px 10px; font-size:12px;">
-            <option value="ALL">All</option>
-            <option value="UDHAR">Udhar Khata</option>
-            <option value="CASH">Cashbook</option>
-          </select>
-          <button class="btn btn-sm btn-secondary" id="toggleRowsBtn" onclick="toggleRows()">Show All</button>
+      <div class="footer-ribbon"><i class="fa-solid fa-heart me-1"></i> Smart Cashbook • Simple &amp; Secure</div>
+    </main>
+  </div>
+
+  <nav class="mobile-dock no-print">
+    <button type="button" onclick="switchView('STATEMENT', 'navHomeBtn')"><i class="fa-solid fa-house"></i><span>Home</span></button>
+    <button type="button" onclick="switchView('UDHAAR', 'navReportsBtn')"><i class="fa-solid fa-book-open"></i><span>Udhaar</span></button>
+    <button type="button" onclick="openNewEntryModal('CREDIT')" class="btn btn-primary rounded-circle text-white" style="width:42px;height:42px;padding:0;"><i class="fa-solid fa-plus"></i></button>
+    <button type="button" onclick="openChartModal()"><i class="fa-solid fa-chart-pie"></i><span>Charts</span></button>
+    <button type="button" onclick="openPinModal()"><i class="fa-solid fa-key"></i><span>PIN</span></button>
+  </nav>
+
+  <!-- Add Statement Entry Modal -->
+  <div class="modal fade" id="newEntryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div id="newEntryHeader" class="modal-header bg-success text-white"><h5 class="modal-title fw-bold" id="newEntryModalLabel">New Entry</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body p-4 bg-light">
+          <form id="newEntryForm" onsubmit="handleNewEntrySubmit(event)">
+            <input type="hidden" id="entryType" value="CREDIT">
+            <div class="mb-3"><label class="form-label small fw-bold">Date</label><input type="date" id="newDate" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label small fw-bold">Quick Hindi / English Tags</label><div class="d-flex flex-wrap gap-1"><button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="applyQuickTag('दुकान बिक्री / Shop Sale', 'Salary / Income')">दुकान बिक्री</button><button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="applyQuickTag('किराना / Kirana', 'General')">किराना</button><button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="applyQuickTag('पेट्रोल / Petrol', 'Transport')">पेट्रोल</button><button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="applyQuickTag('बिजली बिल / Bill', 'Utilities & Bills')">बिल</button></div></div>
+            <div class="mb-3"><label class="form-label small fw-bold">Description (Hindi / English)</label><input type="text" id="newDescription" class="form-control" placeholder="e.g. दुकान बिक्री / Shop Income" required></div>
+            <div class="row g-2 mb-3">
+              <div class="col-7"><label class="form-label small fw-bold">Category</label><input type="text" id="newCategory" list="catOptions" class="form-control" required><datalist id="catOptions"></datalist></div>
+              <div class="col-5"><label class="form-label small fw-bold">Mode</label><select id="newPaymentMode" class="form-select"><option value="Cash">Cash</option><option value="UPI">UPI</option><option value="Bank">Bank</option></select></div>
+            </div>
+            <div class="mb-3"><label id="newAmountLabel" class="form-label small fw-bold text-success">Amount (₹)</label><input type="number" step="0.01" id="newAmount" class="form-control form-control-lg fw-bold" placeholder="0.00" required></div>
+            <div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" id="newSubmitBtn" class="btn btn-success px-4">Save Entry</button></div>
+          </form>
         </div>
       </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Party</th>
-              <th>Type</th>
-              <th>Remark</th>
-              <th>Amount</th>
-              <th class="no-print">Edit</th>
-            </tr>
-          </thead>
-          <tbody id="entriesTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Fast Lightweight Chart (Zero External CDN Lag) -->
-    <div class="card no-print">
-      <h2>Monthly Overview</h2>
-      <div id="chartBox" class="bar-chart"></div>
     </div>
   </div>
-</div>
 
-<!-- POPUP EDIT MODAL -->
-<div id="editModal" class="modal-backdrop hidden">
-  <div class="modal-card">
-    <h2>Edit Entry</h2>
-    <input type="hidden" id="editId" />
-    <div class="field"><label>Date</label><input type="date" id="editDate" /></div>
-    <div class="field">
-      <label>Type</label>
-      <select id="editType">
-        <option value="CASH_IN">Cash In (आवक)</option>
-        <option value="CASH_OUT">Cash Out (खर्च)</option>
-        <option value="UDHAR_GIVEN">Udhar Given (उधार दिया)</option>
-        <option value="UDHAR_TAKEN">Udhar Taken (उधार लिया)</option>
-      </select>
-    </div>
-    <div class="field"><label>Amount (₹)</label><input type="number" id="editAmount" step="0.01" /></div>
-    <div class="field"><label>Party / Name</label><input type="text" id="editParty" /></div>
-    <div class="field"><label>Remark</label><input type="text" id="editNote" /></div>
-    <div style="display:flex; gap:8px; margin-top:12px;">
-      <button class="btn" onclick="saveEdit()">Update</button>
-      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+  <!-- Edit Statement Entry Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-dark text-white"><h5 class="modal-title fw-bold">Edit Transaction</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body p-4 bg-light">
+          <form id="editForm" onsubmit="handleEditSubmit(event)">
+            <input type="hidden" id="editRowIndex">
+            <div class="mb-3"><label class="form-label small fw-bold">Date</label><input type="date" id="editDate" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label small fw-bold">Description</label><input type="text" id="editDescription" class="form-control" required></div>
+            <div class="row g-2 mb-3">
+              <div class="col-7"><label class="form-label small fw-bold">Category</label><input type="text" id="editCategory" list="catOptions" class="form-control" required><datalist id="catOptions"></datalist></div>
+              <div class="col-5"><label class="form-label small fw-bold">Mode</label><select id="editPaymentMode" class="form-select"><option value="Cash">Cash</option><option value="UPI">UPI</option><option value="Bank">Bank</option></select></div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6"><label class="form-label small fw-bold text-success">Credit (+)</label><input type="number" step="0.01" id="editCredit" class="form-control"></div>
+              <div class="col-6"><label class="form-label small fw-bold text-danger">Debit (-)</label><input type="number" step="0.01" id="editDebit" class="form-control"></div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" id="editSubmitBtn" class="btn btn-primary px-4">Save Changes</button></div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-  const DB_KEY = "mycashbook_apk_store_v1";
-  let db = JSON.parse(localStorage.getItem(DB_KEY) || "null") || {
-    user: null,
-    activeMonth: new Date().toISOString().slice(0, 7),
-    months: [new Date().toISOString().slice(0, 7)],
-    entries: []
-  };
-  let showAll = false;
+  <!-- Edit Udhaar Entry Modal -->
+  <div class="modal fade" id="editUdhaarModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Udhaar Entry</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body p-4 bg-light">
+          <form onsubmit="handleEditUdhaarSubmit(event)">
+            <input type="hidden" id="editUdhaarId">
+            <div class="mb-3"><label class="form-label small fw-bold">Party Name</label><input type="text" id="editUdhaarParty" class="form-control" required></div>
+            <div class="row g-2 mb-3">
+              <div class="col-6"><label class="form-label small fw-bold">Type</label><select id="editUdhaarType" class="form-select"><option value="LENA">Lena Hai / Given (+)</option><option value="DENA">Dena Hai / Taken (-)</option></select></div>
+              <div class="col-6"><label class="form-label small fw-bold">Amount (₹)</label><input type="number" step="0.01" min="0.01" id="editUdhaarAmount" class="form-control fw-bold" required></div>
+            </div>
+            <div class="mb-3"><label class="form-label small fw-bold">Date &amp; Time</label><input type="datetime-local" id="editUdhaarDateTime" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label small fw-bold">Note (Hindi / English)</label><input type="text" id="editUdhaarNote" class="form-control" required></div>
+            <div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary px-4">Update Udhaar</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  function persist() {
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-  }
+  <!-- Enhanced Budget & Tools Modal -->
+  <div class="modal fade" id="budgetModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header text-white" style="background: linear-gradient(90deg, #062873 0%, #0b49b8 100%);">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-sliders me-2 text-warning"></i>Smart Budget Planner &amp; Cashbook Tools</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-light">
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-lg-7">
+              <div class="card p-3 h-100 border-0 shadow-sm rounded-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold text-primary m-0"><i class="fa-solid fa-bullseye me-1"></i>Monthly Expense Budget &amp; Safe Daily Spend</h6>
+                  <span id="budgetUsagePctBadge" class="badge bg-primary">0%</span>
+                </div>
+                <form onsubmit="handleSaveBudget(event)" class="mb-2">
+                  <div class="input-group">
+                    <span class="input-group-text fw-bold">₹</span>
+                    <input type="number" step="1" min="0" id="budgetInput" class="form-control fw-bold" placeholder="Enter monthly budget e.g. 25000">
+                    <button type="submit" class="btn btn-primary fw-bold px-3">Save Budget</button>
+                  </div>
+                </form>
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2" onclick="applyBudgetPreset(10000)">₹10,000</button>
+                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2" onclick="applyBudgetPreset(25000)">₹25,000</button>
+                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2" onclick="applyBudgetPreset(50000)">₹50,000</button>
+                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2" onclick="applyBudgetPreset(100000)">₹1,00,000</button>
+                </div>
+                <div class="progress mb-2" style="height: 11px; border-radius: 999px;">
+                  <div id="budgetProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+                </div>
+                <div class="row g-2 text-center mt-1">
+                  <div class="col-4"><div class="p-2 rounded-3 bg-danger bg-opacity-10"><div class="small text-muted fw-semibold">Spent</div><div id="budgetSpentText" class="fw-bold text-danger small">₹0.00</div></div></div>
+                  <div class="col-4"><div class="p-2 rounded-3 bg-success bg-opacity-10"><div class="small text-muted fw-semibold">Remaining</div><div id="budgetRemainingText" class="fw-bold text-success small">₹0.00</div></div></div>
+                  <div class="col-4"><div class="p-2 rounded-3 bg-primary bg-opacity-10"><div class="small text-muted fw-semibold">Safe / Day</div><div id="budgetSafeDailyText" class="fw-bold text-primary small">₹0.00</div></div></div>
+                </div>
+              </div>
+            </div>
 
-  function showAuthView(view) {
-    document.getElementById("loginCard").classList.toggle("hidden", view !== "login");
-    document.getElementById("signupCard").classList.toggle("hidden", view !== "signup");
-  }
+            <div class="col-12 col-lg-5">
+              <div class="card p-3 h-100 border-0 shadow-sm rounded-4">
+                <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-tags me-1"></i>Custom Categories Manager</h6>
+                <form onsubmit="handleAddCustomCategory(event)" class="mb-2">
+                  <div class="input-group">
+                    <input type="text" id="customCategoryInput" class="form-control" placeholder="e.g. दुकान खर्च / Kirana">
+                    <button type="submit" class="btn btn-outline-primary fw-bold">Add</button>
+                  </div>
+                </form>
+                <div id="customCategoryChips" class="d-flex flex-wrap gap-1 mt-2" style="max-height: 135px; overflow-y: auto;"></div>
+              </div>
+            </div>
+          </div>
 
-  function switchLoginMode(mode) {
-    document.getElementById("pinModeBox").classList.toggle("hidden", mode !== "pin");
-    document.getElementById("passwordModeBox").classList.toggle("hidden", mode !== "password");
-  }
+          <div class="card p-3 border-0 shadow-sm rounded-4 mb-3">
+            <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-chart-pie me-1"></i>Category Expense Breakdown (Current Month)</h6>
+            <div id="budgetCategoryBreakdown" class="row g-2"></div>
+          </div>
 
-  function handleSignup() {
-    const name = document.getElementById("signupName").value.trim();
-    const email = document.getElementById("signupEmail").value.trim().toLowerCase();
-    const password = document.getElementById("signupPassword").value;
-    const confirmPassword = document.getElementById("signupConfirmPassword").value;
-    const pin = document.getElementById("signupPin").value.trim();
-    const confirmPin = document.getElementById("signupConfirmPin").value.trim();
+          <div class="card p-3 border-0 shadow-sm rounded-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <h6 class="fw-bold text-danger m-0"><i class="fa-solid fa-screwdriver-wrench me-1"></i>Statement Actions &amp; Sheet Maintenance</h6>
+                <small class="text-muted">Export formatted Excel, print statement with header (kaitsatnam@gmail.com), or clear selected month.</small>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3" onclick="downloadFormattedExcel()"><i class="fa-solid fa-file-excel me-1"></i>Export Excel</button>
+                <button type="button" class="btn btn-outline-dark btn-sm fw-bold rounded-pill px-3" onclick="printFullMonth()"><i class="fa-solid fa-print me-1"></i>Print Statement</button>
+                <button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-3" onclick="handleClearMonth()"><i class="fa-solid fa-trash-can me-1"></i>Clear Selected Month</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    if (!name || !email || !password || !pin) return alert("Please fill all fields including PIN.");
-    if (password !== confirmPassword) return alert("Passwords do not match.");
-    if (!/^\d{4,6}$/.test(pin) || pin !== confirmPin) return alert("Enter a matching 4 to 6 digit PIN.");
+  <!-- 6-Digit PIN Setup Modal -->
+  <div class="modal fade" id="pinModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-key me-2 text-warning"></i>6-Digit App PIN Security</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-light">
+          <form onsubmit="handleSavePin(event)">
+            <div class="mb-2">
+              <label class="form-label small fw-bold">Enter 6-Digit PIN</label>
+              <input type="password" id="setupPinInput" maxlength="6" pattern="\d{6}" inputmode="numeric" class="form-control form-control-lg text-center fw-bold" style="letter-spacing: 6px;" placeholder="123456" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Confirm 6-Digit PIN</label>
+              <input type="password" id="confirmSetupPinInput" maxlength="6" pattern="\d{6}" inputmode="numeric" class="form-control form-control-lg text-center fw-bold" style="letter-spacing: 6px;" placeholder="123456" required>
+              <div id="setupPinMismatchMsg" class="text-danger small mt-1" style="display:none;">Both 6-digit PINs must match.</div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-2">
+              <button type="button" class="btn btn-outline-danger btn-sm fw-bold" onclick="removeSavedPin()"><i class="fa-solid fa-lock-open me-1"></i>Disable PIN</button>
+              <button type="submit" class="btn btn-dark btn-sm px-4 py-2 fw-bold"><i class="fa-solid fa-check me-1"></i>Save 6-Digit PIN</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    db.user = { name, email, password, pin };
-    persist();
-    launchDashboard();
-  }
+  <!-- Professional 3-Chart Analytics Modal -->
+  <div class="modal fade" id="chartModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header" style="background: linear-gradient(90deg, #062873 0%, #0b49b8 100%); color: #fff;">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-chart-line me-2 text-warning"></i>Professional Cashflow Analytics &amp; Diagrams</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-light">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <div class="card p-3 h-100 border-0 shadow-sm rounded-4">
+                <h6 class="fw-bold text-center text-primary mb-2">Credit vs Debit Comparison</h6>
+                <div style="height:240px;"><canvas id="cashflowChart"></canvas></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card p-3 h-100 border-0 shadow-sm rounded-4">
+                <h6 class="fw-bold text-center text-primary mb-2">Expense Breakdown by Category</h6>
+                <div style="height:240px;"><canvas id="categoryChart"></canvas></div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-3 border-0 shadow-sm rounded-4">
+            <h6 class="fw-bold text-center text-primary mb-2">Daily Cashflow Trend (Credit vs Debit)</h6>
+            <div style="height:250px;"><canvas id="trendChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  function handlePinLogin() {
-    const pin = document.getElementById("loginPin").value.trim();
-    if (!db.user) {
-      alert("No account found. Create your account first.");
-      return showAuthView("signup");
+  <script>
+    var DEFAULT_VISIBLE_LIMIT = 5, showAllEntries = false, currentQuickFilter = "ALL";
+    var allEntries = [], latestChartData = { credit: 0, debit: 0, categories: {}, dailyTrend: {} };
+    var cashflowChartInstance = null, categoryChartInstance = null, trendChartInstance = null;
+    var newEntryModalInstance = null, editModalInstance = null, editUdhaarModalInstance = null, budgetModalInstance = null, pinModalInstance = null, chartModalInstance = null;
+    var lastDeletedEntry = null;
+    var PIN_STORAGE_KEY = "cashbook_app_pin_6digit_v1";
+    var BUDGET_STORAGE_KEY = "cashbook_monthly_budget_v1";
+    var CUSTOM_CATS_KEY = "cashbook_custom_categories_v1";
+    var DEFAULT_CATEGORIES = ["Salary / Income", "Business", "Transport", "Utilities & Bills", "Food & Dining", "Shopping", "Rent & Housing", "General"];
+
+    function setText(id, v) { var el = document.getElementById(id); if (el) el.innerText = v; }
+    function setHtml(id, v) { var el = document.getElementById(id); if (el) el.innerHTML = v; }
+    function escHtml(v) { return String(v === null || v === undefined ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+    function escAttr(v) { return escHtml(v).replace(/'/g, "&#39;"); }
+    function fmtINR(n) { return "₹" + (Number(n) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function cleanText(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
+
+    function getNowIsoLocal() {
+      var d = new Date();
+      var off = d.getTimezoneOffset();
+      var local = new Date(d.getTime() - off * 60000);
+      return local.toISOString().slice(0, 16);
     }
-    if (pin !== db.user.pin) return alert("Incorrect PIN.");
-    document.getElementById("loginPin").value = "";
-    launchDashboard();
-  }
 
-  function handlePasswordLogin() {
-    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
-    const password = document.getElementById("loginPassword").value;
-    if (!db.user) {
-      alert("No account found. Create your account first.");
-      return showAuthView("signup");
+    function formatNowDisplayIN() {
+      var d = new Date();
+      var dd = String(d.getDate()).padStart(2, "0");
+      var mm = String(d.getMonth() + 1).padStart(2, "0");
+      var yyyy = d.getFullYear();
+      var hr24 = d.getHours();
+      var ampm = hr24 >= 12 ? "PM" : "AM";
+      var hr12 = hr24 % 12 || 12;
+      var min = String(d.getMinutes()).padStart(2, "0");
+      return dd + "/" + mm + "/" + yyyy + " " + String(hr12).padStart(2, "0") + ":" + min + " " + ampm;
     }
-    if (email !== db.user.email || password !== db.user.password) return alert("Invalid email or password.");
-    document.getElementById("loginPassword").value = "";
-    launchDashboard();
-  }
 
-  function lockApp() {
-    document.getElementById("appSection").classList.add("hidden");
-    document.getElementById("authSection").classList.remove("hidden");
-    showAuthView("login");
-    switchLoginMode("pin");
-  }
-
-  function ensureMonth(ym) {
-    if (!db.months.includes(ym)) {
-      db.months.push(ym);
-      db.months.sort();
+    function formatIsoLocalToDisplayIN(isoVal) {
+      if (!isoVal) return formatNowDisplayIN();
+      var parts = String(isoVal).split("T");
+      var dp = (parts[0] || "").split("-");
+      if (dp.length !== 3) return formatNowDisplayIN();
+      var tp = (parts[1] || "00:00").split(":");
+      var hr24 = parseInt(tp[0] || "0", 10);
+      var min = String(tp[1] || "00").padStart(2, "0");
+      var ampm = hr24 >= 12 ? "PM" : "AM";
+      var hr12 = hr24 % 12 || 12;
+      return dp[2] + "/" + dp[1] + "/" + dp[0] + " " + String(hr12).padStart(2, "0") + ":" + min + " " + ampm;
     }
-  }
 
-  function launchDashboard() {
-    document.getElementById("authSection").classList.add("hidden");
-    document.getElementById("appSection").classList.remove("hidden");
-    document.getElementById("welcomeTitle").textContent = `${db.user.name} — Cashbook`;
-    const today = new Date().toISOString().slice(0, 10);
-    document.getElementById("entryDate").value = today;
-    ensureMonth(today.slice(0, 7));
-    renderDashboard();
-  }
+    function resetUdhaarDateTimeDefault() {
+      var el = document.getElementById("udhaarDateTimeInput");
+      if (el) el.value = getNowIsoLocal();
+    }
 
-  function deltaOf(e) {
-    const v = Number(e.amount) || 0;
-    return (e.type === "CASH_IN" || e.type === "UDHAR_GIVEN") ? v : -v;
-  }
+    function ensureCurrentMonthSelected() {
+      var mf = document.getElementById("monthFilter");
+      if (mf && !mf.value) { var now = new Date(); mf.value = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0"); }
+      return mf ? mf.value : "";
+    }
 
-  function addEntry() {
-    const date = document.getElementById("entryDate").value;
-    const type = document.getElementById("entryType").value;
-    const amount = parseFloat(document.getElementById("entryAmount").value);
-    const party = document.getElementById("entryParty").value.trim() || "-";
-    const note = document.getElementById("entryNote").value.trim() || "-";
+    function switchView(view, btnId) {
+      document.getElementById("statementSection").style.display = view === "UDHAAR" ? "none" : "block";
+      document.getElementById("udhaarSection").style.display = view === "UDHAAR" ? "block" : "none";
+      ["navHomeBtn", "navReportsBtn", "navAnalyticsBtn", "navToolsBtn", "navSettingsBtn"].forEach(function(id) {
+        var b = document.getElementById(id); if (b) b.className = "side-nav-btn" + (id === btnId ? " active" : "");
+      });
+      if (view === "UDHAAR") { resetUdhaarDateTimeDefault(); renderUdhaarKhata(); syncUdhaarFromCloud(false); }
+      else { loadData(); }
+    }
 
-    if (!date || isNaN(amount) || amount <= 0) return alert("Enter valid date and amount.");
-    const ym = date.slice(0, 7);
-    ensureMonth(ym);
-    db.activeMonth = ym;
-    db.entries.push({ id: String(Date.now()), date, month: ym, type, amount, party, note });
-    persist();
+    function showAlert(msg, showUndo) {
+      setText("alertMsg", msg || "");
+      var u = document.getElementById("undoDeleteBtn"), b = document.getElementById("alertBox");
+      if (u) u.style.display = showUndo ? "inline-block" : "none";
+      if (b) b.style.display = "block";
+      setTimeout(function() { if (b) b.style.display = "none"; }, showUndo ? 8000 : 4000);
+    }
+    function hideAlert() { var b = document.getElementById("alertBox"); if (b) b.style.display = "none"; }
 
-    document.getElementById("entryAmount").value = "";
-    document.getElementById("entryParty").value = "";
-    document.getElementById("entryNote").value = "";
-    renderDashboard();
-  }
+    function readCustomCategories() {
+      try { var p = JSON.parse(localStorage.getItem(CUSTOM_CATS_KEY) || "[]"); return Array.isArray(p) ? p : []; } catch (e) { return []; }
+    }
+    function writeCustomCategories(arr) {
+      try { localStorage.setItem(CUSTOM_CATS_KEY, JSON.stringify(arr || [])); } catch (e) {}
+    }
+    function getAllCategories() {
+      var custom = readCustomCategories();
+      var merged = DEFAULT_CATEGORIES.slice();
+      for (var i = 0; i < custom.length; i++) { var c = String(custom[i] || "").trim(); if (c && merged.indexOf(c) === -1) merged.push(c); }
+      return merged;
+    }
+    function populateCategoryDatalist() {
+      var dl = document.getElementById("catOptions");
+      if (dl) dl.innerHTML = getAllCategories().map(function(c) { return "<option value='" + escAttr(c) + "'>"; }).join("");
+      renderCustomCategoryChips();
+    }
+    function renderCustomCategoryChips() {
+      var wrap = document.getElementById("customCategoryChips");
+      if (!wrap) return;
+      var custom = readCustomCategories();
+      if (!custom.length) {
+        wrap.innerHTML = "<span class='small text-muted'>No custom categories yet.</span>";
+        return;
+      }
+      wrap.innerHTML = custom.map(function(c) {
+        return "<span class='badge bg-light text-dark border d-inline-flex align-items-center gap-1 py-2 px-2'>" +
+          escHtml(c) +
+          "<button type='button' class='btn-close' style='font-size:9px;' onclick='removeCustomCategory(\"" + escAttr(c) + "\")' title='Remove'></button>" +
+        "</span>";
+      }).join("");
+    }
+    function removeCustomCategory(catName) {
+      var next = readCustomCategories().filter(function(c) { return String(c) !== String(catName); });
+      writeCustomCategories(next);
+      populateCategoryDatalist();
+    }
+    function handleAddCustomCategory(e) {
+      e.preventDefault(); var inp = document.getElementById("customCategoryInput"), val = cleanText(inp.value); if (!val) return;
+      var custom = readCustomCategories();
+      if (DEFAULT_CATEGORIES.indexOf(val) === -1 && custom.indexOf(val) === -1) { custom.push(val); writeCustomCategories(custom); }
+      inp.value = ""; populateCategoryDatalist(); showAlert("Category added!");
+    }
 
-  function openEdit(id) {
-    const item = db.entries.find(x => x.id === id);
-    if (!item) return;
-    document.getElementById("editId").value = item.id;
-    document.getElementById("editDate").value = item.date;
-    document.getElementById("editType").value = item.type;
-    document.getElementById("editAmount").value = item.amount;
-    document.getElementById("editParty").value = item.party === "-" ? "" : item.party;
-    document.getElementById("editNote").value = item.note === "-" ? "" : item.note;
-    document.getElementById("editModal").classList.remove("hidden");
-  }
+    function getCategoryPill(cat) {
+      var c = String(cat || "General"), low = c.toLowerCase();
+      if (low.indexOf("salary") !== -1 || low.indexOf("income") !== -1) return "<span class='cat-pill cat-income'><i class='fa-solid fa-cart-shopping'></i> " + escHtml(c) + "</span>";
+      if (low.indexOf("business") !== -1) return "<span class='cat-pill cat-business'><i class='fa-solid fa-briefcase'></i> " + escHtml(c) + "</span>";
+      if (low.indexOf("transport") !== -1) return "<span class='cat-pill cat-transport'><i class='fa-solid fa-gas-pump'></i> " + escHtml(c) + "</span>";
+      if (low.indexOf("util") !== -1 || low.indexOf("bill") !== -1) return "<span class='cat-pill cat-bills'><i class='fa-solid fa-wifi'></i> " + escHtml(c) + "</span>";
+      return "<span class='cat-pill cat-general'><i class='fa-solid fa-star'></i> " + escHtml(c) + "</span>";
+    }
 
-  function closeModal() {
-    document.getElementById("editModal").classList.add("hidden");
-  }
+    function detectPaymentMode(desc) {
+      var s = String(desc || "").toLowerCase();
+      if (s.indexOf("[upi]") !== -1 || /\bupi\b|gpay|phonepe|paytm/.test(s)) return "UPI";
+      if (s.indexOf("[bank]") !== -1 || /\bbank\b|neft|imps|rtgs|atm/.test(s)) return "Bank";
+      return "Cash";
+    }
+    function formatDescriptionWithMode(desc, mode) { return cleanText(desc).replace(/\s*\[(Cash|UPI|Bank)\]\s*$/i, "").trim() + " [" + (mode || "Cash") + "]"; }
+    function sortDescending(list) {
+      return list.slice().sort(function(a, b) {
+        var da = String(a.rawDate || ""), db = String(b.rawDate || "");
+        return da !== db ? db.localeCompare(da) : (Number(b.rowIndex) || 0) - (Number(a.rowIndex) || 0);
+      });
+    }
 
-  function saveEdit() {
-    const id = document.getElementById("editId").value;
-    const i = db.entries.findIndex(x => x.id === id);
-    if (i === -1) return;
-    const date = document.getElementById("editDate").value;
-    const type = document.getElementById("editType").value;
-    const amount = parseFloat(document.getElementById("editAmount").value);
-    const party = document.getElementById("editParty").value.trim() || "-";
-    const note = document.getElementById("editNote").value.trim() || "-";
-    if (!date || isNaN(amount) || amount <= 0) return alert("Invalid date or amount.");
-    const ym = date.slice(0, 7);
-    ensureMonth(ym);
-    db.entries[i] = { ...db.entries[i], date, month: ym, type, amount, party, note };
-    persist();
-    closeModal();
-    renderDashboard();
-  }
+    function onMonthChange() { showAllEntries = false; renderUdhaarKhata(); syncUdhaarFromCloud(false); loadData(); }
+    function toggleShowAllEntries() { showAllEntries = !showAllEntries; filterTable(); }
+    function toggleDateRangeBar() { var b = document.getElementById("dateRangeBar"); if (b) b.style.display = (b.style.display === "none" || !b.style.display) ? "flex" : "none"; }
+    function clearDateRangeFilter() { document.getElementById("fromDateFilter").value = ""; document.getElementById("toDateFilter").value = ""; filterTable(); }
+    function applyPresetRange(preset) {
+      var fEl = document.getElementById("fromDateFilter"), tEl = document.getElementById("toDateFilter"), now = new Date();
+      ["btnRangeMonth", "btnRangeLastMonth", "btnRangeYear"].forEach(function(id) { var el = document.getElementById(id); if (el) el.className = "range-pill-btn"; });
+      if (preset === "THIS_MONTH") { fEl.value = ""; tEl.value = ""; document.getElementById("btnRangeMonth").className = "range-pill-btn active-range"; }
+      else if (preset === "LAST_MONTH") { var p = new Date(now.getFullYear(), now.getMonth() - 1, 1), ld = new Date(now.getFullYear(), now.getMonth(), 0); fEl.value = p.getFullYear() + "-" + String(p.getMonth() + 1).padStart(2, "0") + "-01"; tEl.value = ld.getFullYear() + "-" + String(ld.getMonth() + 1).padStart(2, "0") + "-" + String(ld.getDate()).padStart(2, "0"); document.getElementById("btnRangeLastMonth").className = "range-pill-btn active-range"; }
+      else if (preset === "THIS_YEAR") { fEl.value = now.getFullYear() + "-01-01"; tEl.value = now.getFullYear() + "-12-31"; document.getElementById("btnRangeYear").className = "range-pill-btn active-range"; }
+      filterTable();
+    }
 
-  function toggleRows() {
-    showAll = !showAll;
-    document.getElementById("toggleRowsBtn").textContent = showAll ? "Last 5 Only" : "Show All";
-    renderDashboard();
-  }
+    function getSavedBudget() {
+      try { var v = parseFloat(localStorage.getItem(BUDGET_STORAGE_KEY) || "0"); return isNaN(v) || v < 0 ? 0 : v; } catch (e) { return 0; }
+    }
+    function applyBudgetPreset(amt) {
+      var inp = document.getElementById("budgetInput");
+      if (inp) inp.value = amt;
+      try { localStorage.setItem(BUDGET_STORAGE_KEY, String(amt)); } catch (e) {}
+      updateBudgetUI();
+      showAlert("Budget set to " + fmtINR(amt));
+    }
+    function getRemainingDaysInMonth(monthKey) {
+      var now = new Date();
+      var parts = String(monthKey || "").split("-");
+      var y = parts.length >= 2 ? parseInt(parts[0], 10) : now.getFullYear();
+      var m = parts.length >= 2 ? parseInt(parts[1], 10) : (now.getMonth() + 1);
+      var totalDays = new Date(y, m, 0).getDate();
+      var curYm = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+      if (monthKey === curYm) {
+        return Math.max(1, totalDays - now.getDate() + 1);
+      }
+      return totalDays;
+    }
+    function updateBudgetUI() {
+      var budget = getSavedBudget();
+      var spent = Number(latestChartData.debit) || 0;
+      var inp = document.getElementById("budgetInput");
+      if (inp && document.activeElement !== inp) inp.value = budget > 0 ? budget : "";
+      var pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
+      var rem = budget > 0 ? (budget - spent) : 0;
+      var remDays = getRemainingDaysInMonth(ensureCurrentMonthSelected());
+      var safeDaily = budget > 0 ? Math.max(0, rem / remDays) : 0;
 
-  function renderDashboard() {
-    const tabs = document.getElementById("monthTabs");
-    tabs.innerHTML = db.months.map(m =>
-      `<button class="tab ${m === db.activeMonth ? "active" : ""}" onclick="db.activeMonth='${m}';renderDashboard();">${m}</button>`
-    ).join("");
+      setText("budgetUsagePctBadge", budget > 0 ? (pct + "% Used") : "No Limit");
+      setText("budgetSpentText", fmtINR(spent));
+      setText("budgetRemainingText", budget > 0 ? fmtINR(rem) : "Not Set");
+      setText("budgetSafeDailyText", budget > 0 ? fmtINR(safeDaily) : "-");
 
-    const m = db.activeMonth;
-    const carry = db.entries.filter(e => e.month < m).reduce((s, e) => s + deltaOf(e), 0);
-    const cur = db.entries.filter(e => e.month === m);
+      var bar = document.getElementById("budgetProgressBar");
+      if (bar) {
+        bar.style.width = pct + "%";
+        bar.className = "progress-bar " + (pct >= 90 ? "bg-danger" : (pct >= 70 ? "bg-warning" : "bg-success"));
+      }
 
-    let cIn = 0, cOut = 0, uGiv = 0, uTak = 0;
-    cur.forEach(e => {
-      if (e.type === "CASH_IN") cIn += e.amount;
-      if (e.type === "CASH_OUT") cOut += e.amount;
-      if (e.type === "UDHAR_GIVEN") uGiv += e.amount;
-      if (e.type === "UDHAR_TAKEN") uTak += e.amount;
+      var catMap = latestChartData.categories || {};
+      var keys = Object.keys(catMap);
+      var breakdownEl = document.getElementById("budgetCategoryBreakdown");
+      if (breakdownEl) {
+        if (!keys.length) {
+          breakdownEl.innerHTML = "<div class='col-12 small text-muted'>No debit expenses recorded in this month yet.</div>";
+        } else {
+          breakdownEl.innerHTML = keys.map(function(k) {
+            var val = Number(catMap[k]) || 0;
+            var share = spent > 0 ? Math.round((val / spent) * 100) : 0;
+            return "<div class='col-12 col-md-6 col-lg-4'>" +
+              "<div class='p-2 rounded-3 border bg-white d-flex justify-content-between align-items-center'>" +
+                "<div><div class='fw-bold small text-dark'>" + escHtml(k) + "</div><div class='text-muted' style='font-size:11px;'>" + share + "% of debit</div></div>" +
+                "<span class='fw-bold text-danger small'>" + fmtINR(val) + "</span>" +
+              "</div>" +
+            "</div>";
+          }).join("");
+        }
+      }
+    }
+
+    function loadData() {
+      populateCategoryDatalist(); renderUdhaarKhata();
+      var month = ensureCurrentMonthSelected();
+      setHtml("tableBody", "<tr><td colspan='8' class='text-center py-4 text-muted'><i class='fa-solid fa-spinner fa-spin me-2'></i> Loading sheet data...</td></tr>");
+      var hasGasHost = Boolean(window.google && google.script && google.script.run);
+      var hasGasUrl = Boolean(getConfiguredGasUrl());
+      if (!hasGasHost && !hasGasUrl) {
+        setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>Apps Script Web App URL set nahi hai. Top bar ke Link icon par click karke URL dalein.</td></tr>");
+        return;
+      }
+      runBackend("getDashboardData", [month], function(data) {
+        if (!data || data.ok === false) {
+          setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>" + escHtml((data && data.error) || "Sheet load error") + " <button type='button' class='btn btn-sm btn-primary ms-2' onclick='loadData()'>Retry</button></td></tr>");
+          return;
+        }
+        setText("totalCredit", fmtINR(data.totalCredit));
+        setText("totalDebit", fmtINR(data.totalDebit));
+        setText("netBalance", fmtINR(data.totalBalance));
+        if (data.sheetName) setText("activeTabBadge", data.sheetName);
+        allEntries = sortDescending(Array.isArray(data.entries) ? data.entries : []);
+        latestChartData = { credit: Number(data.totalCredit) || 0, debit: Number(data.totalDebit) || 0, categories: data.categoryTotals || {}, dailyTrend: data.dailyTrend || {} };
+        updateBudgetUI();
+        var todayStr = new Date().toISOString().split("T")[0], todayDr = 0, totalDr = 0, days = {};
+        for (var i = 0; i < allEntries.length; i++) { var d = Number(allEntries[i].debit) || 0; if (d > 0) { totalDr += d; if (allEntries[i].rawDate === todayStr) todayDr += d; if (allEntries[i].rawDate) days[allEntries[i].rawDate] = true; } }
+        var dc = Object.keys(days).length;
+        setText("ledgerMetaSummary", "Today Debit: " + fmtINR(todayDr) + " | Daily Avg: " + fmtINR(dc > 0 ? totalDr / dc : 0));
+        filterTable();
+      }, function(err) {
+        var msg = (err && err.message) || err;
+        setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>" + escHtml(msg) + " <button type='button' class='btn btn-sm btn-primary ms-2' onclick='loadData()'>Retry</button></td></tr>");
+      });
+    }
+
+    function setQuickFilter(val) { currentQuickFilter = val || "ALL"; filterTable(); }
+    function filterTable() {
+      var q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+      var fDate = document.getElementById("fromDateFilter").value, tDate = document.getElementById("toDateFilter").value;
+      renderTable(allEntries.filter(function(item) {
+        if (q && String(item.description || "").toLowerCase().indexOf(q) === -1 && String(item.category || "").toLowerCase().indexOf(q) === -1 && String(item.credit || "").toLowerCase().indexOf(q) === -1 && String(item.debit || "").toLowerCase().indexOf(q) === -1) return false;
+        var rd = String(item.rawDate || "");
+        if (fDate && rd && rd < fDate) return false;
+        if (tDate && rd && rd > tDate) return false;
+        if (currentQuickFilter === "CREDIT") return (Number(item.credit) || 0) > 0;
+        if (currentQuickFilter === "DEBIT") return (Number(item.debit) || 0) > 0;
+        return true;
+      }));
+    }
+
+    /* Order: S.No. -> Date & Time -> Category -> Description -> Credit -> Debit -> Balance -> Actions */
+    function renderTable(list) {
+      var total = list.length, btn = document.getElementById("toggleAllBtn"), showList = list;
+      if (total > DEFAULT_VISIBLE_LIMIT) {
+        btn.style.display = "inline-flex";
+        if (!showAllEntries) { showList = list.slice(0, DEFAULT_VISIBLE_LIMIT); setText("recordCount", "Latest " + showList.length + " of " + total + " Records"); btn.innerHTML = "<i class='fa-solid fa-eye text-primary'></i> Show All (" + total + ")"; }
+        else { setText("recordCount", "All " + total + " Records"); btn.innerHTML = "<i class='fa-solid fa-compress text-primary'></i> Latest " + DEFAULT_VISIBLE_LIMIT; }
+      } else { btn.style.display = "none"; setText("recordCount", "Latest " + total + " of " + total + " Records"); }
+      if (!showList.length) { setHtml("tableBody", "<tr><td colspan='8' class='text-center text-muted py-4'>No records found.</td></tr>"); return; }
+      var html = "";
+      for (var i = 0; i < showList.length; i++) {
+        var it = showList[i], isTop = (i === 0), mode = detectPaymentMode(it.description);
+        html += "<tr>" +
+          "<td class='text-center fw-bold'>" + (i + 1) + "</td>" +
+          "<td>" + escHtml(it.date) + "</td>" +
+          "<td class='text-center'>" + getCategoryPill(it.category) + "</td>" +
+          "<td class='fw-bold' title='" + escAttr(it.description) + "'>" + escHtml(it.description) + (isTop ? "<div><span class='closing-tag'>Closing</span></div>" : "") + "</td>" +
+          "<td class='text-end'>" + (Number(it.credit) > 0 ? "<span class='text-success fw-bold'>" + fmtINR(it.credit) + "</span>" : "-") + "</td>" +
+          "<td class='text-end'>" + (Number(it.debit) > 0 ? "<span class='text-danger fw-bold'>" + fmtINR(it.debit) + "</span>" : "-") + "</td>" +
+          "<td class='text-end'><span class='bal-chip'>" + fmtINR(it.balance) + "</span></td>" +
+          "<td class='text-center no-print'>" +
+            "<button type='button' class='btn btn-sm btn-outline-primary me-1' data-row='" + escAttr(it.rowIndex) + "' data-date='" + escAttr(it.rawDate) + "' data-desc='" + escAttr(it.description) + "' data-cat='" + escAttr(it.category) + "' data-mode='" + escAttr(mode) + "' data-credit='" + escAttr(it.credit) + "' data-debit='" + escAttr(it.debit) + "' onclick='openEditFromButton(this)'><i class='fa-solid fa-pen'></i></button>" +
+            "<button type='button' class='btn btn-sm btn-outline-danger' onclick='deleteRow(" + Number(it.rowIndex) + ")'><i class='fa-solid fa-trash'></i></button>" +
+          "</td>" +
+        "</tr>";
+      }
+      setHtml("tableBody", html);
+    }
+
+    function applyQuickTag(desc, cat) { var d = document.getElementById("newDescription"); d.value = !d.value.trim() ? desc : cleanText(d.value + " - " + desc); if (cat) document.getElementById("newCategory").value = cat; }
+    function openNewEntryModal(type) {
+      populateCategoryDatalist(); document.getElementById("newEntryForm").reset(); document.getElementById("entryType").value = type;
+      document.getElementById("newDate").value = new Date().toISOString().split("T")[0]; document.getElementById("newPaymentMode").value = "Cash";
+      document.getElementById("newEntryHeader").className = "modal-header text-white " + (type === "CREDIT" ? "bg-success" : "bg-danger");
+      setText("newEntryModalLabel", type === "CREDIT" ? "Add Credit Entry (+)" : "Add Debit Entry (-)");
+      document.getElementById("newSubmitBtn").className = "btn px-4 " + (type === "CREDIT" ? "btn-success" : "btn-danger");
+      if (!newEntryModalInstance && typeof bootstrap !== "undefined") newEntryModalInstance = new bootstrap.Modal(document.getElementById("newEntryModal"));
+      newEntryModalInstance.show();
+    }
+    function handleNewEntrySubmit(e) {
+      e.preventDefault(); var type = document.getElementById("entryType").value, amt = document.getElementById("newAmount").value, mode = document.getElementById("newPaymentMode").value, btn = document.getElementById("newSubmitBtn");
+      btn.disabled = true; btn.innerText = "Saving...";
+      runBackend("saveTransaction", [{ rowIndex: "", date: document.getElementById("newDate").value, description: formatDescriptionWithMode(document.getElementById("newDescription").value, mode), category: cleanText(document.getElementById("newCategory").value) || "General", credit: type === "CREDIT" ? amt : "", debit: type === "DEBIT" ? amt : "" }], function(res) {
+        btn.disabled = false; btn.innerText = "Save Entry";
+        if (!res || res.ok === false) { alert("Error: " + ((res && res.error) || "")); return; }
+        newEntryModalInstance.hide(); showAlert("Saved!"); loadData();
+      }, function(err) { btn.disabled = false; btn.innerText = "Save Entry"; alert("Error: " + ((err && err.message) || err)); });
+    }
+    function openEditFromButton(el) {
+      populateCategoryDatalist();
+      document.getElementById("editRowIndex").value = el.getAttribute("data-row") || "";
+      document.getElementById("editDate").value = el.getAttribute("data-date") || "";
+      document.getElementById("editDescription").value = cleanText(el.getAttribute("data-desc") || "").replace(/\s*\[(Cash|UPI|Bank)\]\s*$/i, "").trim();
+      document.getElementById("editCategory").value = el.getAttribute("data-cat") || "General";
+      document.getElementById("editPaymentMode").value = el.getAttribute("data-mode") || "Cash";
+      var cr = parseFloat(el.getAttribute("data-credit")) || 0, dr = parseFloat(el.getAttribute("data-debit")) || 0;
+      document.getElementById("editCredit").value = cr > 0 ? cr : ""; document.getElementById("editDebit").value = dr > 0 ? dr : "";
+      if (!editModalInstance && typeof bootstrap !== "undefined") editModalInstance = new bootstrap.Modal(document.getElementById("editModal"));
+      editModalInstance.show();
+    }
+    function handleEditSubmit(e) {
+      e.preventDefault(); var mode = document.getElementById("editPaymentMode").value, btn = document.getElementById("editSubmitBtn");
+      btn.disabled = true; btn.innerText = "Saving...";
+      runBackend("saveTransaction", [{ rowIndex: document.getElementById("editRowIndex").value, date: document.getElementById("editDate").value, description: formatDescriptionWithMode(document.getElementById("editDescription").value, mode), category: cleanText(document.getElementById("editCategory").value) || "General", credit: document.getElementById("editCredit").value, debit: document.getElementById("editDebit").value }], function(res) {
+        btn.disabled = false; btn.innerText = "Save Changes";
+        if (!res || res.ok === false) { alert("Error: " + ((res && res.error) || "")); return; }
+        editModalInstance.hide(); showAlert("Updated!"); loadData();
+      }, function(err) { btn.disabled = false; btn.innerText = "Save Changes"; alert("Error: " + ((err && err.message) || err)); });
+    }
+    function deleteRow(rowIndex) {
+      var m = ensureCurrentMonthSelected(); if (!confirm("Delete entry?")) return;
+      var target = null; for (var i = 0; i < allEntries.length; i++) { if (Number(allEntries[i].rowIndex) === Number(rowIndex)) { target = allEntries[i]; break; } }
+      runBackend("deleteTransaction", [rowIndex, m], function(res) { if (!res || res.ok === false) return; lastDeletedEntry = target; showAlert("Deleted!", Boolean(lastDeletedEntry)); loadData(); });
+    }
+    function handleUndoDelete() {
+      if (!lastDeletedEntry) return; var it = lastDeletedEntry; lastDeletedEntry = null;
+      runBackend("saveTransaction", [{ rowIndex: "", date: it.rawDate, description: it.description, category: it.category, credit: Number(it.credit) > 0 ? Number(it.credit) : "", debit: Number(it.debit) > 0 ? Number(it.debit) : "" }], function() { showAlert("Restored!"); loadData(); });
+    }
+    function handleClearMonth() {
+      var m = ensureCurrentMonthSelected();
+      if (!confirm("Clear all entries in " + m + "?")) return;
+      if (budgetModalInstance) budgetModalInstance.hide();
+      runBackend("clearMonthEntries", [m], function(r) { showAlert((r && r.message) || "Cleared!"); loadData(); });
+    }
+    function downloadFormattedExcel() {
+      var m = ensureCurrentMonthSelected();
+      runBackend("getExcelExportInfo", [m], function(res) {
+        if (res && res.ok && res.url) { window.open(res.url, "_blank"); if (res.tempSheetName) setTimeout(function() { runBackend("removeTempExportSheet", [res.tempSheetName]); }, 4000); }
+      });
+    }
+    function printFullMonth() {
+      setText("printMonthSubtitle", "Period: " + ensureCurrentMonthSelected());
+      setText("printGeneratedAt", "Printed: " + formatNowDisplayIN());
+      var was = showAllEntries;
+      if (!was && allEntries.length > DEFAULT_VISIBLE_LIMIT) { showAllEntries = true; filterTable(); }
+      window.print();
+      if (!was) { showAllEntries = false; filterTable(); }
+    }
+    function openBudgetModal() {
+      populateCategoryDatalist();
+      updateBudgetUI();
+      if (!budgetModalInstance && typeof bootstrap !== "undefined") budgetModalInstance = new bootstrap.Modal(document.getElementById("budgetModal"));
+      budgetModalInstance.show();
+    }
+    function handleSaveBudget(e) {
+      e.preventDefault();
+      var val = parseFloat(document.getElementById("budgetInput").value);
+      var num = isNaN(val) || val < 0 ? 0 : val;
+      try { localStorage.setItem(BUDGET_STORAGE_KEY, String(num)); } catch (err) {}
+      updateBudgetUI();
+      showAlert("Monthly budget updated to " + fmtINR(num) + "!");
+    }
+
+    function openChartModal() {
+      if (!chartModalInstance && typeof bootstrap !== "undefined") chartModalInstance = new bootstrap.Modal(document.getElementById("chartModal")); chartModalInstance.show();
+      setTimeout(function() {
+        if (typeof Chart === "undefined") return;
+        if (cashflowChartInstance) cashflowChartInstance.destroy();
+        cashflowChartInstance = new Chart(document.getElementById("cashflowChart").getContext("2d"), {
+          type: "bar",
+          data: { labels: ["Total Credit (+)", "Total Debit (-)"], datasets: [{ data: [latestChartData.credit, latestChartData.debit], backgroundColor: ["#16a34a", "#dc2626"], borderRadius: 10, maxBarThickness: 72 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        if (categoryChartInstance) categoryChartInstance.destroy();
+        var k = Object.keys(latestChartData.categories || {}), v = Object.values(latestChartData.categories || {});
+        categoryChartInstance = new Chart(document.getElementById("categoryChart").getContext("2d"), {
+          type: "doughnut",
+          data: { labels: k.length ? k : ["No Debit"], datasets: [{ data: v.length ? v : [1], backgroundColor: ["#2563eb", "#7e22ce", "#ea580c", "#0284c7", "#ca8a04", "#16a34a"], borderWidth: 2 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: "58%", plugins: { legend: { position: "right" } } }
+        });
+
+        if (trendChartInstance) trendChartInstance.destroy();
+        var trendMap = latestChartData.dailyTrend || {};
+        var dates = Object.keys(trendMap).sort();
+        trendChartInstance = new Chart(document.getElementById("trendChart").getContext("2d"), {
+          type: "line",
+          data: {
+            labels: dates,
+            datasets: [
+              { label: "Credit (+)", data: dates.map(function(d) { return trendMap[d].credit || 0; }), borderColor: "#16a34a", backgroundColor: "rgba(22, 163, 74, 0.14)", fill: true, tension: 0.35 },
+              { label: "Debit (-)", data: dates.map(function(d) { return trendMap[d].debit || 0; }), borderColor: "#dc2626", backgroundColor: "rgba(220, 38, 38, 0.12)", fill: true, tension: 0.35 }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false } }
+        });
+      }, 200);
+    }
+
+    // 6-Digit PIN Functions
+    function getSavedPin() { try { return String(localStorage.getItem(PIN_STORAGE_KEY) || "").trim(); } catch (e) { return ""; } }
+    function checkInitialPinLock() {
+      var saved = getSavedPin();
+      if (/^\d{6}$/.test(saved)) {
+        closeForgotPinPanel();
+        document.getElementById("pinLockOverlay").style.display = "flex";
+      }
+    }
+    function handleUnlockPin(e) {
+      e.preventDefault();
+      var entered = document.getElementById("unlockPinInput").value.trim();
+      if (entered === getSavedPin()) {
+        document.getElementById("unlockPinInput").value = "";
+        document.getElementById("unlockPinError").style.display = "none";
+        document.getElementById("pinLockOverlay").style.display = "none";
+      } else {
+        document.getElementById("unlockPinError").style.display = "block";
+      }
+    }
+    function openForgotPinPanel() {
+      document.getElementById("unlockPinFormWrap").style.display = "none";
+      document.getElementById("forgotPinPanelWrap").style.display = "block";
+      document.getElementById("resetConfirmWordInput").value = "";
+      document.getElementById("resetConfirmError").style.display = "none";
+    }
+    function closeForgotPinPanel() {
+      document.getElementById("forgotPinPanelWrap").style.display = "none";
+      document.getElementById("unlockPinFormWrap").style.display = "block";
+    }
+    function handleConfirmedPinReset() {
+      var word = (document.getElementById("resetConfirmWordInput").value || "").trim().toUpperCase();
+      if (word !== "RESET") {
+        document.getElementById("resetConfirmError").style.display = "block";
+        return;
+      }
+      try { localStorage.removeItem(PIN_STORAGE_KEY); } catch (e) {}
+      closeForgotPinPanel();
+      document.getElementById("pinLockOverlay").style.display = "none";
+      showAlert("6-digit PIN reset! Set a new PIN anytime from PIN Lock.");
+    }
+    function openPinModal() {
+      var cur = getSavedPin();
+      document.getElementById("setupPinInput").value = /^\d{6}$/.test(cur) ? cur : "";
+      document.getElementById("confirmSetupPinInput").value = /^\d{6}$/.test(cur) ? cur : "";
+      document.getElementById("setupPinMismatchMsg").style.display = "none";
+      if (!pinModalInstance && typeof bootstrap !== "undefined") pinModalInstance = new bootstrap.Modal(document.getElementById("pinModal"));
+      pinModalInstance.show();
+    }
+    function handleSavePin(e) {
+      e.preventDefault();
+      var p1 = document.getElementById("setupPinInput").value.trim();
+      var p2 = document.getElementById("confirmSetupPinInput").value.trim();
+      if (!/^\d{6}$/.test(p1) || p1 !== p2) {
+        document.getElementById("setupPinMismatchMsg").style.display = "block";
+        return;
+      }
+      document.getElementById("setupPinMismatchMsg").style.display = "none";
+      try { localStorage.setItem(PIN_STORAGE_KEY, p1); } catch (err) {}
+      pinModalInstance.hide();
+      showAlert("6-digit PIN saved!");
+    }
+    function removeSavedPin() {
+      try { localStorage.removeItem(PIN_STORAGE_KEY); } catch (err) {}
+      pinModalInstance.hide();
+      showAlert("PIN lock disabled.");
+    }
+    function toggleDarkMode() { document.body.classList.toggle("dark-mode"); }
+
+    var UDHAAR_GLOBAL_KEY = "cashbook_separate_udhaar_master_v2";
+    var udhaarSaveQueue = Promise.resolve();
+    var udhaarPendingCount = 0;
+
+    function readUdhaarList() { try { var r = JSON.parse(localStorage.getItem(UDHAAR_GLOBAL_KEY) || "[]"); return Array.isArray(r) ? r : []; } catch (e) { return []; } }
+    function writeUdhaarList(l) { try { localStorage.setItem(UDHAAR_GLOBAL_KEY, JSON.stringify(l || [])); } catch (e) {} }
+
+    function updateUdhaarQueueButtonState() {
+      var btn = document.getElementById("udhaarSaveBtn");
+      if (!btn) return;
+      if (udhaarPendingCount > 0) btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin me-1'></i> Queue (" + udhaarPendingCount + ")";
+      else btn.innerHTML = "<i class='fa-solid fa-plus me-1'></i> Add Entry";
+    }
+
+    function enqueueUdhaarCloudTask(taskFn) {
+      udhaarPendingCount++;
+      updateUdhaarQueueButtonState();
+      udhaarSaveQueue = udhaarSaveQueue.then(function() {
+        return new Promise(function(resolve) {
+          var hasBackend = Boolean((window.google && google.script && google.script.run) || getConfiguredGasUrl()); if (!hasBackend) { resolve(); return; }
+          taskFn(function() { resolve(); });
+        });
+      }).finally(function() {
+        udhaarPendingCount = Math.max(0, udhaarPendingCount - 1);
+        updateUdhaarQueueButtonState();
+      });
+      return udhaarSaveQueue;
+    }
+
+    function syncUdhaarFromCloud(toast) {
+      var hasBackend = Boolean((window.google && google.script && google.script.run) || getConfiguredGasUrl()); if (!hasBackend || udhaarPendingCount > 0) return;
+      runBackend("getUdhaarEntries", [""], function(res) {
+        if (res && res.ok && Array.isArray(res.entries) && udhaarPendingCount === 0) {
+          writeUdhaarList(res.entries);
+          renderUdhaarKhata();
+          if (toast) showAlert("Udhaar_Khata synced!");
+        }
+      });
+    }
+
+    function handleAddUdhaarEntry(e) {
+      e.preventDefault();
+      var partyEl = document.getElementById("udhaarPartyInput");
+      var typeEl = document.getElementById("udhaarTypeInput");
+      var amtEl = document.getElementById("udhaarAmountInput");
+      var dtEl = document.getElementById("udhaarDateTimeInput");
+      var noteEl = document.getElementById("udhaarNoteInput");
+
+      var isoVal = (dtEl && dtEl.value) ? dtEl.value : getNowIsoLocal();
+      var displayDt = formatIsoLocalToDisplayIN(isoVal);
+
+      var it = {
+        id: "UDH-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+        dateTime: displayDt,
+        dateTimeInput: isoVal,
+        month: isoVal.slice(0, 7),
+        party: cleanText(partyEl.value),
+        type: typeEl.value,
+        amount: parseFloat(amtEl.value),
+        note: cleanText(noteEl.value),
+        settled: false,
+        settledDate: ""
+      };
+
+      var list = readUdhaarList();
+      list.unshift(it);
+      writeUdhaarList(list);
+
+      partyEl.value = "";
+      amtEl.value = "";
+      noteEl.value = "";
+      resetUdhaarDateTimeDefault();
+      partyEl.focus();
+
+      renderUdhaarKhata();
+      showAlert("Entry queued & added to Udhaar_Khata!");
+
+      enqueueUdhaarCloudTask(function(done) {
+        runBackend("saveUdhaarEntry", [it], function() { if (udhaarPendingCount === 1) syncUdhaarFromCloud(false); done(); }, function() { done(); });
+      });
+    }
+
+    function openEditUdhaarModal(id) {
+      var list = readUdhaarList(), found = null;
+      for (var i = 0; i < list.length; i++) { if (String(list[i].id) === String(id)) { found = list[i]; break; } }
+      if (!found) return;
+      document.getElementById("editUdhaarId").value = found.id;
+      document.getElementById("editUdhaarParty").value = found.party;
+      document.getElementById("editUdhaarType").value = found.type === "DENA" ? "DENA" : "LENA";
+      document.getElementById("editUdhaarAmount").value = Number(found.amount) || 0;
+      document.getElementById("editUdhaarDateTime").value = found.dateTimeInput || getNowIsoLocal();
+      document.getElementById("editUdhaarNote").value = found.note;
+      if (!editUdhaarModalInstance && typeof bootstrap !== "undefined") editUdhaarModalInstance = new bootstrap.Modal(document.getElementById("editUdhaarModal"));
+      editUdhaarModalInstance.show();
+    }
+
+    function handleEditUdhaarSubmit(e) {
+      e.preventDefault();
+      var id = document.getElementById("editUdhaarId").value;
+      var isoVal = document.getElementById("editUdhaarDateTime").value || getNowIsoLocal();
+      var displayDt = formatIsoLocalToDisplayIN(isoVal);
+      var list = readUdhaarList(), updatedItem = null;
+      for (var i = 0; i < list.length; i++) {
+        if (String(list[i].id) === String(id)) {
+          list[i].party = cleanText(document.getElementById("editUdhaarParty").value);
+          list[i].type = document.getElementById("editUdhaarType").value;
+          list[i].amount = parseFloat(document.getElementById("editUdhaarAmount").value) || 0;
+          list[i].dateTimeInput = isoVal;
+          list[i].dateTime = displayDt;
+          list[i].month = isoVal.slice(0, 7);
+          list[i].note = cleanText(document.getElementById("editUdhaarNote").value);
+          updatedItem = list[i];
+          break;
+        }
+      }
+      writeUdhaarList(list); renderUdhaarKhata();
+      if (editUdhaarModalInstance) editUdhaarModalInstance.hide();
+      showAlert("Udhaar entry updated!");
+      if (updatedItem) {
+        enqueueUdhaarCloudTask(function(done) {
+          runBackend("saveUdhaarEntry", [updatedItem], function() { if (udhaarPendingCount === 1) syncUdhaarFromCloud(false); done(); }, function() { done(); });
+        });
+      }
+    }
+
+    function toggleSettleUdhaar(id) {
+      var list = readUdhaarList(), next = false, settledAtStr = "";
+      for (var i = 0; i < list.length; i++) {
+        if (String(list[i].id) === String(id)) {
+          next = !list[i].settled;
+          settledAtStr = next ? formatNowDisplayIN() : "";
+          list[i].settled = next;
+          list[i].settledDate = settledAtStr;
+          break;
+        }
+      }
+      writeUdhaarList(list);
+      renderUdhaarKhata();
+      showAlert(next ? ("Settled at " + settledAtStr + " & added to Cashbook balance!") : "Re-opened as Pending!");
+
+      enqueueUdhaarCloudTask(function(done) {
+        runBackend("settleUdhaarEntry", [id, next, settledAtStr], function() { if (udhaarPendingCount === 1) syncUdhaarFromCloud(false); done(); }, function() { done(); });
+      });
+    }
+
+    function deleteUdhaarEntry(id) {
+      if (!confirm("Delete Udhaar entry?")) return;
+      writeUdhaarList(readUdhaarList().filter(function(x) { return String(x.id) !== String(id); }));
+      renderUdhaarKhata();
+      enqueueUdhaarCloudTask(function(done) {
+        runBackend("deleteUdhaarEntryOnSheet", [id], function() { if (udhaarPendingCount === 1) syncUdhaarFromCloud(false); done(); }, function() { done(); });
+      });
+    }
+
+    function renderUdhaarKhata() {
+      var list = readUdhaarList(), lena = 0, dena = 0;
+      for (var i = 0; i < list.length; i++) {
+        if (!list[i].settled) {
+          if (list[i].type === "LENA") lena += Number(list[i].amount) || 0;
+          else dena += Number(list[i].amount) || 0;
+        }
+      }
+      setText("udhaarLenaTotal", fmtINR(lena));
+      setText("udhaarDenaTotal", fmtINR(dena));
+      setText("udhaarNetTotal", fmtINR(lena - dena));
+      setText("udhaarCountBadge", list.length + " Records");
+
+      if (!list.length) {
+        setHtml("udhaarTableBody", "<tr><td colspan='9' class='text-center text-muted py-4'>No Udhaar records.</td></tr>");
+        return;
+      }
+      setHtml("udhaarTableBody", list.map(function(r, idx) {
+        return "<tr>" +
+          "<td class='text-center fw-bold'>" + (idx + 1) + "</td>" +
+          "<td class='small'>" + escHtml(r.dateTime || "-") + "</td>" +
+          "<td class='fw-bold'>" + escHtml(r.party) + "</td>" +
+          "<td>" + escHtml(r.note) + "</td>" +
+          "<td class='text-end fw-bold'>" + fmtINR(r.amount) + "</td>" +
+          "<td class='text-center'><span class='badge " + (r.type === "LENA" ? "bg-success" : "bg-danger") + "'>" + (r.type === "LENA" ? "LENA (+)" : "DENA (-)") + "</span></td>" +
+          "<td class='text-center'><span class='badge " + (r.settled ? "bg-secondary" : "bg-warning text-dark") + "'>" + (r.settled ? "Settled" : "Open") + "</span></td>" +
+          "<td class='small'>" + escHtml(r.settled ? (r.settledDate || "-") : "-") + "</td>" +
+          "<td class='text-center no-print'>" +
+            "<button type='button' class='btn btn-sm btn-outline-primary me-1' onclick='openEditUdhaarModal(\"" + escAttr(r.id) + "\")' title='Edit'><i class='fa-solid fa-pen'></i></button>" +
+            "<button type='button' class='btn btn-sm btn-outline-success me-1' onclick='toggleSettleUdhaar(\"" + escAttr(r.id) + "\")' title='Settle / Re-open'><i class='fa-solid fa-check'></i></button>" +
+            "<button type='button' class='btn btn-sm btn-outline-danger' onclick='deleteUdhaarEntry(\"" + escAttr(r.id) + "\")' title='Delete'><i class='fa-solid fa-trash'></i></button>" +
+          "</td>" +
+        "</tr>";
+      }).join(""));
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      populateCategoryDatalist(); resetUdhaarDateTimeDefault(); checkInitialPinLock(); loadData(); syncUdhaarFromCloud(false);
     });
+  </script>
 
-    document.getElementById("kpiCarry").textContent = `₹${carry.toLocaleString("en-IN")}`;
-    document.getElementById("kpiIn").textContent = `₹${cIn.toLocaleString("en-IN")}`;
-    document.getElementById("kpiOut").textContent = `₹${cOut.toLocaleString("en-IN")}`;
-    document.getElementById("kpiUdhar").textContent = `₹${(uGiv - uTak).toLocaleString("en-IN")}`;
+  <script>
+    // Pre-configured Google Apps Script Web App (/exec) URL
+    var GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxo2YNdwtaTjk-oG6TwMBufAzBb_omnm9oW4I_wGM6zLxa7osWzgxObUsSenJu5aehM/exec";
+    var GAS_URL_STORAGE_KEY = "cashbook_gas_web_app_url_v1";
 
-    const f = document.getElementById("filterType").value;
-    let list = [...cur].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
-    if (f === "UDHAR") list = list.filter(e => e.type.startsWith("UDHAR"));
-    if (f === "CASH") list = list.filter(e => e.type.startsWith("CASH"));
+    function getConfiguredGasUrl() {
+      try {
+        var saved = (localStorage.getItem(GAS_URL_STORAGE_KEY) || "").trim();
+        if (saved.indexOf("https://script.google.com/") === 0) return saved;
+      } catch (e) {}
+      if (GAS_WEB_APP_URL && GAS_WEB_APP_URL.trim().indexOf("https://script.google.com/") === 0) {
+        return GAS_WEB_APP_URL.trim();
+      }
+      return "";
+    }
 
-    const visible = showAll ? list : list.slice(0, 5);
-    document.getElementById("listHeading").textContent = showAll ? `All Entries (${m})` : `Recent Entries - Last 5 (${m})`;
+    function setConfiguredGasUrl(url) {
+      var clean = String(url || "").trim();
+      try {
+        if (clean) localStorage.setItem(GAS_URL_STORAGE_KEY, clean);
+        else localStorage.removeItem(GAS_URL_STORAGE_KEY);
+      } catch (e) {}
+    }
 
-    document.getElementById("entriesTableBody").innerHTML = visible.length
-      ? visible.map(e => `
-          <tr>
-            <td>${e.date}</td>
-            <td>${e.party}</td>
-            <td>${e.type.replace("_", " ")}</td>
-            <td>${e.note}</td>
-            <td>₹${e.amount.toLocaleString("en-IN")}</td>
-            <td class="no-print"><button class="btn btn-sm btn-secondary" onclick="openEdit('${e.id}')">Edit</button></td>
-          </tr>
-        `).join("")
-      : `<tr><td colspan="6" style="text-align:center;color:#6b7280;">No entries yet.</td></tr>`;
+    function callGasJsonp(action, payloadObj, onSuccess, onFailure) {
+      var baseUrl = getConfiguredGasUrl();
+      if (!baseUrl) {
+        if (typeof onFailure === "function") {
+          onFailure(new Error("Apps Script Web App URL set nahi hai."));
+        }
+        return;
+      }
+      var cbName = "cb_cashbook_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+      var scriptEl = document.createElement("script");
+      var finished = false;
+      var timer = setTimeout(function() {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        if (typeof onFailure === "function") onFailure(new Error("Apps Script timeout. Check Web App deployment (Anyone) & New Version."));
+      }, 20000);
 
-    const maxVal = Math.max(cIn, cOut, uGiv, uTak, 1);
-    const bars = [
-      { label: "Cash In", val: cIn, color: "#15803d" },
-      { label: "Cash Out", val: cOut, color: "#b91c1c" },
-      { label: "Udhar Given", val: uGiv, color: "#1d4ed8" },
-      { label: "Udhar Taken", val: uTak, color: "#d97706" }
-    ];
-    document.getElementById("chartBox").innerHTML = bars.map(b => `
-      <div class="bar-row">
-        <span>${b.label}</span>
-        <div class="bar-track"><div class="bar-fill" style="width:${(b.val / maxVal) * 100}%;background:${b.color};"></div></div>
-        <strong style="text-align:right;">₹${b.val.toLocaleString("en-IN")}</strong>
-      </div>
-    `).join("");
-  }
+      function cleanup() {
+        clearTimeout(timer);
+        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+        if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+      }
 
-  function exportCSV() {
-    const rows = [["Month", "Date", "Type", "Party", "Remark", "Amount"]];
-    db.entries.forEach(e => rows.push([e.month, e.date, e.type, e.party, e.note, e.amount]));
-    const csv = "﻿" + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("
-");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
-    a.download = `MyCashbook_${db.activeMonth}.csv`;
-    a.click();
-  }
+      window[cbName] = function(data) {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        if (typeof onSuccess === "function") onSuccess(data);
+      };
 
-  if (!db.user) showAuthView("signup");
-</script>
+      scriptEl.onerror = function() {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        if (typeof onFailure === "function") onFailure(new Error("Apps Script connection error. Verify Code.gs is deployed as Web App (Anyone)."));
+      };
+
+      var q = ["action=" + encodeURIComponent(action), "callback=" + encodeURIComponent(cbName), "_t=" + Date.now()];
+      if (payloadObj && typeof payloadObj === "object") {
+        Object.keys(payloadObj).forEach(function(k) {
+          var v = payloadObj[k];
+          if (v !== undefined && v !== null) {
+            q.push(encodeURIComponent(k) + "=" + encodeURIComponent(typeof v === "object" ? JSON.stringify(v) : String(v)));
+          }
+        });
+      }
+      var sep = baseUrl.indexOf("?") === -1 ? "?" : "&";
+      scriptEl.src = baseUrl + sep + q.join("&");
+      document.body.appendChild(scriptEl);
+    }
+
+    function runBackend(methodName, argsArray, onSuccess, onFailure) {
+      var args = Array.isArray(argsArray) ? argsArray : [];
+      if (window.google && google.script && google.script.run) {
+        var runner = google.script.run;
+        if (typeof onSuccess === "function") runner = runner.withSuccessHandler(onSuccess);
+        if (typeof onFailure === "function") runner = runner.withFailureHandler(onFailure);
+        if (typeof runner[methodName] === "function") {
+          runner[methodName].apply(runner, args);
+        }
+        return;
+      }
+
+      var mapped = {};
+      if (methodName === "getDashboardData") {
+        mapped = { monthKey: args[0] || "" };
+      } else if (methodName === "saveTransaction") {
+        mapped = { payload: args[0] || {} };
+      } else if (methodName === "deleteTransaction") {
+        mapped = { rowIndex: args[0], monthKey: args[1] || "" };
+      } else if (methodName === "clearMonthEntries") {
+        mapped = { monthKey: args[0] || "" };
+      } else if (methodName === "getUdhaarEntries") {
+        mapped = { monthKey: args[0] || "" };
+      } else if (methodName === "saveUdhaarEntry") {
+        mapped = { item: args[0] || {} };
+      } else if (methodName === "settleUdhaarEntry") {
+        mapped = { id: args[0], settledBool: args[1], settledDateStr: args[2] || "" };
+      } else if (methodName === "deleteUdhaarEntryOnSheet") {
+        mapped = { id: args[0] };
+      } else if (methodName === "getExcelExportInfo") {
+        mapped = { monthKey: args[0] || "" };
+      } else if (methodName === "removeTempExportSheet") {
+        if (typeof onSuccess === "function") onSuccess({ ok: true });
+        return;
+      }
+      callGasJsonp(methodName, mapped, onSuccess, onFailure);
+    }
+
+    function promptAndSaveGasUrl() {
+      var current = getConfiguredGasUrl() || "https://script.google.com/macros/s/AKfycbxo2YNdwtaTjk-oG6TwMBufAzBb_omnm9oW4I_wGM6zLxa7osWzgxObUsSenJu5aehM/exec";
+      var entered = prompt("Google Apps Script Web App (/exec) URL:", current);
+      if (entered !== null) {
+        var trimmed = entered.trim();
+        if (trimmed && trimmed.indexOf("https://script.google.com/") !== 0) {
+          alert("Kripya valid https://script.google.com/.../exec URL dalein.");
+          return;
+        }
+        setConfiguredGasUrl(trimmed);
+        showAlert(trimmed ? "Apps Script URL save ho gayi! Data sync ho raha hai..." : "Apps Script URL clear kar di gayi.");
+        loadData();
+        syncUdhaarFromCloud(true);
+      }
+    }
+  </script>
+
 </body>
 </html>
