@@ -1,6 +1,9 @@
-# GitHub Pages + Google Apps Script Starter
+# My Cashbook Pro — Ready GitHub Pages Bundle
 
-1. Create a new repository on GitHub (or use an existing one).
-2. Upload `index.html`, `style.css`, `app.js`, and `.gitignore` to the repository root.
-3. In GitHub, go to **Settings > Pages**, select **Deploy from a branch**, choose **main** and **/ (root)**, and save.
-4. Once your `.gs` and `.html` files are shared, wire the `GAS_WEB_APP_URL` inside `app.js` to your `/exec` deployment link.
+- **GitHub Pages URL:** https://officialkaitsatnam.github.io/My-Cashbook-Pro/
+- **Google Apps Script Web App URL:** https://script.google.com/macros/s/AKfycbxo2YNdwtaTjk-oG6TwMBufAzBb_omnm9oW4I_wGM6zLxa7osWzgxObUsSenJu5aehM/exec
+
+## Upload Instructions (`My-Cashbook-Pro` repository)
+1. Upload `index.html`, `manifest.json`, and `manifest.html` to the root of your `My-Cashbook-Pro` GitHub repository.
+2. Ensure `Code.gs` in your Google Apps Script project has the updated `doGet(e)` / `doPost(e)` / `handleBridgeRequest_()` code and is deployed as a Web App (**Execute as: Me**, **Who has access: Anyone**).
+3. Open `https://officialkaitsatnam.github.io/My-Cashbook-Pro/` — the Web App URL is already pre-configured inside `index.html`.

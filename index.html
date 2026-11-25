@@ -898,10 +898,7 @@
         filterTable();
       }, function(err) {
         var msg = (err && err.message) || err;
-        if (!getConfiguredGasUrl() && (!window.google || !google.script || !google.script.run)) {
-          msg = "GitHub Pages connected! Apps Script Web App (/exec) URL set karne ke liye top bar mein Link icon par click karein.";
-        }
-        setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>" + escHtml(msg) + " <button type='button' class='btn btn-sm btn-primary ms-2' onclick='promptAndSaveGasUrl()'>Set Web App URL</button></td></tr>");
+        setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>" + escHtml(msg) + " <button type='button' class='btn btn-sm btn-primary ms-2' onclick='loadData()'>Retry</button></td></tr>");
       });
     }
 
@@ -1334,8 +1331,8 @@
   </script>
 
   <script>
-    // Paste your deployed Google Apps Script Web App (/exec) URL below
-    var GAS_WEB_APP_URL = "";
+    // Pre-configured Google Apps Script Web App (/exec) URL
+    var GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxo2YNdwtaTjk-oG6TwMBufAzBb_omnm9oW4I_wGM6zLxa7osWzgxObUsSenJu5aehM/exec";
     var GAS_URL_STORAGE_KEY = "cashbook_gas_web_app_url_v1";
 
     function getConfiguredGasUrl() {
@@ -1361,7 +1358,7 @@
       var baseUrl = getConfiguredGasUrl();
       if (!baseUrl) {
         if (typeof onFailure === "function") {
-          onFailure(new Error("Apps Script Web App URL set nahi hai. Pehle apni /exec URL paste karein."));
+          onFailure(new Error("Apps Script Web App URL set nahi hai."));
         }
         return;
       }
@@ -1409,7 +1406,6 @@
       document.body.appendChild(scriptEl);
     }
 
-    // Unified runner: uses native google.script.run inside GAS iframe, and JSONP bridge on GitHub Pages
     function runBackend(methodName, argsArray, onSuccess, onFailure) {
       var args = Array.isArray(argsArray) ? argsArray : [];
       if (window.google && google.script && google.script.run) {
@@ -1449,8 +1445,8 @@
     }
 
     function promptAndSaveGasUrl() {
-      var current = getConfiguredGasUrl();
-      var entered = prompt("Apni Google Apps Script Web App (/exec) URL paste karein:", current);
+      var current = getConfiguredGasUrl() || "https://script.google.com/macros/s/AKfycbxo2YNdwtaTjk-oG6TwMBufAzBb_omnm9oW4I_wGM6zLxa7osWzgxObUsSenJu5aehM/exec";
+      var entered = prompt("Google Apps Script Web App (/exec) URL:", current);
       if (entered !== null) {
         var trimmed = entered.trim();
         if (trimmed && trimmed.indexOf("https://script.google.com/") !== 0) {
