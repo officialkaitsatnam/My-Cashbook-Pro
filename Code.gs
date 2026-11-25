@@ -858,6 +858,237 @@ function getExcelExportInfo(monthKey) {
 
 function removeTempExportSheet(tempSheetName) {}
 
+var USERS_SHEET_NAME = "Users_Profile";
+var OTP_STORE_PREFIX = "CB_OTP_V1_";
+
+function getUsersSheet_(ss) {
+  var sh = ss.getSheetByName(USERS_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(USERS_SHEET_NAME);
+    sh.getRange(1, 1, 1, 9).setValues([[
+      "User_ID", "Full_Name", "Email", "Phone", "Role_Or_Business",
+      "City_Address", "Password_Hash", "Avatar_Data_Uri", "Updated_At"
+    ]]);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, 9)
+      .setBackground("#0b2349")
+      .setFontColor("#ffffff")
+      .setFontWeight("bold");
+  }
+  return sh;
+}
+
+function hashPasswordServer_(passStr) {
+  var bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    String(passStr || "") + "|MyCashbookProSalt2026",
+    Utilities.Charset.UTF_8
+  );
+  return bytes.map(function(b) {
+    var v = (b < 0 ? b + 256 : b).toString(16);
+    return v.length === 1 ? "0" + v : v;
+  }).join("");
+}
+
+function findUserRowByEmail_(sh, email) {
+  var target = String(email || "").trim().toLowerCase();
+  if (!target || sh.getLastRow() < 2) return -1;
+  var vals = sh.getRange(2, 1, sh.getLastRow() - 1, 9).getValues();
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][2] || "").trim().toLowerCase() === target) {
+      return 2 + i;
+    }
+  }
+  return -1;
+}
+
+function sanitizeUserRecord_(rowVals) {
+  return {
+    userId: String(rowVals[0] || ""),
+    name: String(rowVals[1] || ""),
+    email: String(rowVals[2] || ""),
+    phone: String(rowVals[3] || ""),
+    business: String(rowVals[4] || ""),
+    address: String(rowVals[5] || ""),
+    avatarUrl: String(rowVals[7] || ""),
+    updatedAt: String(rowVals[8] || "")
+  };
+}
+
+function registerAccountOnSheet(payload) {
+  try {
+    var p = payload || {};
+    var name = String(p.name || "").trim();
+    var email = String(p.email || "").trim().toLowerCase();
+    var phone = String(p.phone || "").trim();
+    var business = String(p.business || "").trim();
+    var address = String(p.address || "").trim();
+    var password = String(p.password || "");
+    var avatarUrl = String(p.avatarUrl || "").trim();
+
+    if (!name || !email || !password) {
+      return { ok: false, error: "Name, Email aur Password zaroori hai." };
+    }
+    var ss = getTargetSpreadsheet_();
+    var sh = getUsersSheet_(ss);
+    var existingRow = findUserRowByEmail_(sh, email);
+    if (existingRow !== -1) {
+      return { ok: false, error: "Is email par account pehle se bana hua hai. Login karein." };
+    }
+    var userId = "USR-" + Utilities.getUuid().slice(0, 8).toUpperCase();
+    var passHash = hashPasswordServer_(password);
+    var nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "Asia/Kolkata", "dd/MM/yyyy HH:mm:ss");
+    var rowData = [userId, name, email, phone, business, address, passHash, avatarUrl, nowStr];
+    sh.appendRow(rowData);
+    return { ok: true, user: sanitizeUserRecord_(rowData) };
+  } catch (err) {
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+}
+
+function loginAccountOnSheet(email, password) {
+  try {
+    var cleanEmail = String(email || "").trim().toLowerCase();
+    var rawPass = String(password || "");
+    if (!cleanEmail || !rawPass) {
+      return { ok: false, error: "Email aur Password dalein." };
+    }
+    var ss = getTargetSpreadsheet_();
+    var sh = getUsersSheet_(ss);
+    var rowIdx = findUserRowByEmail_(sh, cleanEmail);
+    if (rowIdx === -1) {
+      return { ok: false, error: "Account nahi mila. Kripya pehle Create Account karein." };
+    }
+    var vals = sh.getRange(rowIdx, 1, 1, 9).getValues()[0];
+    var storedHash = String(vals[6] || "");
+    var inputHash = hashPasswordServer_(rawPass);
+    if (storedHash !== inputHash && storedHash !== rawPass) {
+      return { ok: false, error: "Galat password. Forgot Password > Send OTP ka use karein." };
+    }
+    return { ok: true, user: sanitizeUserRecord_(vals) };
+  } catch (err) {
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+}
+
+function sendPasswordResetOtp(email) {
+  try {
+    var cleanEmail = String(email || "").trim().toLowerCase();
+    if (!cleanEmail || cleanEmail.indexOf("@") === -1) {
+      return { ok: false, error: "Sahi Email ID dalein." };
+    }
+    var ss = getTargetSpreadsheet_();
+    var sh = getUsersSheet_(ss);
+    var rowIdx = findUserRowByEmail_(sh, cleanEmail);
+    if (rowIdx === -1) {
+      return { ok: false, error: "Is email se koi registered account nahi mila." };
+    }
+    var vals = sh.getRange(rowIdx, 1, 1, 9).getValues()[0];
+    var userName = String(vals[1] || "User");
+    var otp = String(Math.floor(100000 + Math.random() * 900000));
+    var props = PropertiesService.getScriptProperties();
+    props.setProperty(OTP_STORE_PREFIX + cleanEmail, JSON.stringify({
+      otp: otp,
+      expiresAt: Date.now() + 10 * 60 * 1000
+    }));
+
+    MailApp.sendEmail({
+      to: cleanEmail,
+      subject: "My Cashbook Pro — Password Reset OTP: " + otp,
+      htmlBody:
+        "<div style='font-family:Segoe UI,Arial,sans-serif;max-width:480px;margin:0 auto;border:1px solid #cbd5e1;border-radius:12px;overflow:hidden;'>" +
+          "<div style='background:#0b49b8;color:#fff;padding:16px 20px;'>" +
+            "<h2 style='margin:0;font-size:18px;color:#ffd43b;'>My Cashbook Pro</h2>" +
+            "<div style='font-size:12px;opacity:0.9;'>Password Reset Verification</div>" +
+          "</div>" +
+          "<div style='padding:20px;color:#0f172a;'>" +
+            "<p>Namaste <strong>" + userName + "</strong>,</p>" +
+            "<p>Aapka 6-digit Password Reset OTP niche diya gaya hai (10 minute tak valid):</p>" +
+            "<div style='font-size:28px;font-weight:800;letter-spacing:6px;background:#eff6ff;color:#0b49b8;padding:12px 16px;border-radius:10px;text-align:center;margin:16px 0;'>" + otp + "</div>" +
+            "<p style='font-size:12px;color:#64748b;'>Agar aapne yeh request nahi ki hai to is email ko ignore karein.</p>" +
+          "</div>" +
+        "</div>"
+    });
+
+    return { ok: true, message: "6-digit OTP aapki email (" + cleanEmail + ") par bhej diya gaya hai." };
+  } catch (err) {
+    return { ok: false, error: "OTP send error: " + (err && err.message ? err.message : String(err)) };
+  }
+}
+
+function resetPasswordWithOtp(email, otp, newPassword) {
+  try {
+    var cleanEmail = String(email || "").trim().toLowerCase();
+    var cleanOtp = String(otp || "").trim();
+    var nextPass = String(newPassword || "");
+    if (!cleanEmail || !cleanOtp || nextPass.length < 4) {
+      return { ok: false, error: "Email, 6-digit OTP aur naya password (kam se kam 4 akshar) dalein." };
+    }
+    var props = PropertiesService.getScriptProperties();
+    var rawRecord = props.getProperty(OTP_STORE_PREFIX + cleanEmail);
+    if (!rawRecord) {
+      return { ok: false, error: "OTP nahi mila ya expire ho chuka hai. Dobara Send OTP click karein." };
+    }
+    var rec = JSON.parse(rawRecord);
+    if (Date.now() > Number(rec.expiresAt || 0)) {
+      props.deleteProperty(OTP_STORE_PREFIX + cleanEmail);
+      return { ok: false, error: "OTP expire ho gaya hai. Naya OTP mangwayein." };
+    }
+    if (String(rec.otp || "") !== cleanOtp) {
+      return { ok: false, error: "Galat OTP. Kripya email wala 6-digit OTP dalein." };
+    }
+    var ss = getTargetSpreadsheet_();
+    var sh = getUsersSheet_(ss);
+    var rowIdx = findUserRowByEmail_(sh, cleanEmail);
+    if (rowIdx === -1) {
+      return { ok: false, error: "User record nahi mila." };
+    }
+    var nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "Asia/Kolkata", "dd/MM/yyyy HH:mm:ss");
+    sh.getRange(rowIdx, 7).setValue(hashPasswordServer_(nextPass));
+    sh.getRange(rowIdx, 9).setValue(nowStr);
+    props.deleteProperty(OTP_STORE_PREFIX + cleanEmail);
+    return { ok: true, message: "Password safaltapoorvak badal diya gaya hai! Ab login karein." };
+  } catch (err) {
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+}
+
+function updateUserProfileOnSheet(profile) {
+  try {
+    var p = profile || {};
+    var email = String(p.email || "").trim().toLowerCase();
+    var name = String(p.name || "").trim();
+    var phone = String(p.phone || "").trim();
+    var business = String(p.business || "").trim();
+    var address = String(p.address || "").trim();
+    var avatarUrl = String(p.avatarUrl || "").trim();
+    if (!email || !name) {
+      return { ok: false, error: "Name aur Email zaroori hai." };
+    }
+    var ss = getTargetSpreadsheet_();
+    var sh = getUsersSheet_(ss);
+    var nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "Asia/Kolkata", "dd/MM/yyyy HH:mm:ss");
+    var rowIdx = findUserRowByEmail_(sh, email);
+    if (rowIdx === -1) {
+      var userId = "USR-" + Utilities.getUuid().slice(0, 8).toUpperCase();
+      var rowData = [userId, name, email, phone, business, address, "", avatarUrl, nowStr];
+      sh.appendRow(rowData);
+      return { ok: true, user: sanitizeUserRecord_(rowData) };
+    }
+    var curVals = sh.getRange(rowIdx, 1, 1, 9).getValues()[0];
+    curVals[1] = name;
+    curVals[3] = phone;
+    curVals[4] = business;
+    curVals[5] = address;
+    if (avatarUrl) curVals[7] = avatarUrl;
+    curVals[8] = nowStr;
+    sh.getRange(rowIdx, 1, 1, 9).setValues([curVals]);
+    return { ok: true, user: sanitizeUserRecord_(curVals) };
+  } catch (err) {
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+}
+
 function handleBridgeRequest_(e) {
   var params = (e && e.parameter) ? e.parameter : {};
   var action = String(params.action || "").trim();
@@ -922,6 +1153,20 @@ function handleBridgeRequest_(e) {
       result = deleteUdhaarEntryOnSheet(params.id);
     } else if (action === "getExcelExportInfo") {
       result = getExcelExportInfo(params.monthKey || params.month || "");
+    } else if (action === "registerAccountOnSheet") {
+      var regP = params.payload;
+      if (typeof regP === "string") { try { regP = JSON.parse(regP); } catch (er1) { regP = {}; } }
+      result = registerAccountOnSheet(regP || params);
+    } else if (action === "loginAccountOnSheet") {
+      result = loginAccountOnSheet(params.email || "", params.password || "");
+    } else if (action === "sendPasswordResetOtp") {
+      result = sendPasswordResetOtp(params.email || "");
+    } else if (action === "resetPasswordWithOtp") {
+      result = resetPasswordWithOtp(params.email || "", params.otp || "", params.newPassword || "");
+    } else if (action === "updateUserProfileOnSheet") {
+      var profP = params.profile;
+      if (typeof profP === "string") { try { profP = JSON.parse(profP); } catch (er2) { profP = {}; } }
+      result = updateUserProfileOnSheet(profP || params);
     }
   } catch (err) {
     result = { ok: false, error: err && err.message ? err.message : String(err) };
