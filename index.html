@@ -206,28 +206,8 @@
       .bal-chip { color: #0b49b8 !important; font-weight: 800 !important; }
     }
   </style>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <style>
-    #cb-auth-gate{position:fixed;inset:0;z-index:20000;background:linear-gradient(135deg,#071a36,#123d78);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Arial,sans-serif}
-    #cb-auth-gate .cb-auth-card{width:100%;max-width:390px;background:#fff;border-radius:18px;padding:28px 24px;text-align:center;box-shadow:0 18px 55px #0005}
-    #cb-auth-gate .cb-auth-mark{width:64px;height:64px;object-fit:contain;margin-bottom:10px}
-    #cb-auth-gate h2{font-size:22px;color:#0b2349;margin:4px 0 8px;font-weight:800}
-    #cb-auth-gate p{font-size:14px;color:#64748b;margin:0 0 18px}
-    #cb-auth-error{font-size:13px;color:#b91c1c;min-height:20px;margin-top:12px}
-    body.cb-auth-locked{overflow:hidden}
-    body.cb-auth-locked>#pinLockOverlay{display:none!important}
-  </style>
 </head>
-<body class="cb-auth-locked">
-  <div id="cb-auth-gate">
-    <div class="cb-auth-card">
-      <img class="cb-auth-mark" src="icon.png" alt="My Cashbook Pro">
-      <h2>My Cashbook Pro</h2>
-      <p>Apni private Cashbook kholne ke liye Google se sign in karein.</p>
-      <div id="cb-google-signin" style="display:flex;justify-content:center;min-height:44px;"></div>
-      <div id="cb-auth-error" role="alert"></div>
-    </div>
-  </div>
+<body>
   <!-- 6-Digit PIN Lock & Professional Reset Overlay -->
   <div id="pinLockOverlay">
     <div class="card p-4 bg-dark text-white border border-secondary shadow-lg" style="width: 100%; max-width: 390px; border-radius: 18px;">
@@ -1358,64 +1338,6 @@
     var GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxo2YNdwtaTjk-oG6TwMBufAzBb_omnm9oW4I_wGM6zLxa7osWzgxObUsSenJu5aehM/exec";
     var GAS_URL_STORAGE_KEY = "cashbook_gas_web_app_url_v1";
 
-    // Private single-owner Google Sign-In. Only the configured owner email is accepted.
-    var CASHBOOK_GOOGLE_CLIENT_ID = "289553047156-7cbvkp2186bpe9r07huq306jmja7lgis.apps.googleusercontent.com";
-    var CASHBOOK_OWNER_EMAIL = "kaitsatnam@gmail.com";
-    var CASHBOOK_AUTH_TOKEN_KEY = "mcp_google_id_token_v1";
-    var CASHBOOK_AUTH_EMAIL_KEY = "mcp_google_email_v1";
-
-    function getCashbookIdToken() {
-      try { return localStorage.getItem(CASHBOOK_AUTH_TOKEN_KEY) || ""; } catch (e) { return ""; }
-    }
-    function setCashbookAuth_(token, email) {
-      try { localStorage.setItem(CASHBOOK_AUTH_TOKEN_KEY, token); localStorage.setItem(CASHBOOK_AUTH_EMAIL_KEY, email); } catch (e) {}
-    }
-    function clearCashbookAuth_() {
-      try { localStorage.removeItem(CASHBOOK_AUTH_TOKEN_KEY); localStorage.removeItem(CASHBOOK_AUTH_EMAIL_KEY); } catch (e) {}
-    }
-    function showCashbookAuthError_(message) {
-      var el = document.getElementById("cb-auth-error"); if (el) el.textContent = message || "Login nahi ho paya. Dobara koshish karein.";
-    }
-    function unlockCashbook_() {
-      var gate = document.getElementById("cb-auth-gate"); if (gate) gate.style.display = "none";
-      document.body.classList.remove("cb-auth-locked");
-    }
-    function lockCashbook_() {
-      document.body.classList.add("cb-auth-locked");
-      var gate = document.getElementById("cb-auth-gate"); if (gate) gate.style.display = "flex";
-    }
-    function cashbookGoogleCredential_(response) {
-      var token = response && response.credential ? response.credential : "";
-      if (!token) { showCashbookAuthError_("Google se credential nahi mila."); return; }
-      showCashbookAuthError_("Verifying your account...");
-      callGasJsonp("verifyGoogleLogin", { idToken: token }, function(result) {
-        if (result && result.ok && String(result.email || "").toLowerCase() === CASHBOOK_OWNER_EMAIL) {
-          setCashbookAuth_(token, result.email); unlockCashbook_();
-          if (typeof loadData === "function") loadData();
-          if (typeof syncUdhaarFromCloud === "function") syncUdhaarFromCloud(true);
-        } else { clearCashbookAuth_(); showCashbookAuthError_(result && result.error ? result.error : "Sirf owner account ko access hai."); }
-      }, function(err) { showCashbookAuthError_(err && err.message ? err.message : "Login verification failed."); });
-    }
-    function initializeCashbookGoogleLogin_() {
-      var attempts = 0;
-      var timer = setInterval(function() {
-        attempts++;
-        if (window.google && google.accounts && google.accounts.id) {
-          clearInterval(timer);
-          google.accounts.id.initialize({ client_id: CASHBOOK_GOOGLE_CLIENT_ID, callback: cashbookGoogleCredential_, auto_select: false });
-          google.accounts.id.renderButton(document.getElementById("cb-google-signin"), { theme: "outline", size: "large", shape: "rectangular", text: "signin_with", width: 260 });
-          var savedToken = getCashbookIdToken();
-          if (savedToken) {
-            callGasJsonp("verifyGoogleLogin", { idToken: savedToken }, function(r) {
-              if (r && r.ok && String(r.email || "").toLowerCase() === CASHBOOK_OWNER_EMAIL) { unlockCashbook_(); }
-              else { clearCashbookAuth_(); lockCashbook_(); }
-            }, function() { clearCashbookAuth_(); lockCashbook_(); showCashbookAuthError_("Session expire ho gaya. Dobara Google Login karein."); });
-          }
-        } else if (attempts > 40) { clearInterval(timer); showCashbookAuthError_("Google Sign-In load nahi hua. Internet connection check karein."); }
-      }, 250);
-    }
-    document.addEventListener("DOMContentLoaded", initializeCashbookGoogleLogin_);
-
     function getConfiguredGasUrl() {
       try {
         var saved = (localStorage.getItem(GAS_URL_STORAGE_KEY) || "").trim();
@@ -1474,10 +1396,6 @@
       };
 
       var q = ["action=" + encodeURIComponent(action), "callback=" + encodeURIComponent(cbName), "_t=" + Date.now()];
-      if (action !== "verifyGoogleLogin") {
-        var activeToken = getCashbookIdToken();
-        if (activeToken) q.push("idToken=" + encodeURIComponent(activeToken));
-      }
       if (payloadObj && typeof payloadObj === "object") {
         Object.keys(payloadObj).forEach(function(k) {
           var v = payloadObj[k];
