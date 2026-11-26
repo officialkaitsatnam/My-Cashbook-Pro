@@ -11,9 +11,10 @@ function getTargetSpreadsheet_() {
 }
 
 function doGet(e) {
-  ensureNextMonthTabIfDue_();
+  // Handle API bridge first so unauthenticated bridge calls cannot trigger sheet maintenance.
   var bridged = handleBridgeRequest_(e);
   if (bridged) return bridged;
+  ensureNextMonthTabIfDue_();
   return HtmlService.createHtmlOutputFromFile("Index")
     .setTitle("My Cashbook — Smart Money & Udhaar Ledger")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
@@ -1089,6 +1090,30 @@ function updateUserProfileOnSheet(profile) {
   }
 }
 
+var CASHBOOK_OWNER_EMAIL = "kaitsatnam@gmail.com";
+var CASHBOOK_GOOGLE_CLIENT_ID = "289553047156-7cbvkp2186bpe9r07huq306jmja7lgis.apps.googleusercontent.com";
+
+// Verifies Google's signed ID token on the server and restricts access to the owner.
+function verifyGoogleLogin(idToken) {
+  try {
+    var token = String(idToken || "").trim();
+    if (!token) return { ok: false, error: "Google login token missing hai." };
+    var response = UrlFetchApp.fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(token), { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return { ok: false, error: "Google login token invalid ya expire ho gaya. Dobara login karein." };
+    var info = JSON.parse(response.getContentText() || "{}");
+    var email = String(info.email || "").trim().toLowerCase();
+    var audience = String(info.aud || "");
+    var verified = String(info.email_verified || "").toLowerCase() === "true";
+    var expiresAt = Number(info.exp || 0);
+    if (audience !== CASHBOOK_GOOGLE_CLIENT_ID || !verified || email !== CASHBOOK_OWNER_EMAIL || expiresAt <= Math.floor(Date.now() / 1000)) {
+      return { ok: false, error: "Is Google account ko My Cashbook Pro access ki permission nahi hai." };
+    }
+    return { ok: true, email: email, name: String(info.name || "") };
+  } catch (err) {
+    return { ok: false, error: "Google verification error: " + (err && err.message ? err.message : String(err)) };
+  }
+}
+
 function handleBridgeRequest_(e) {
   var params = (e && e.parameter) ? e.parameter : {};
   var action = String(params.action || "").trim();
@@ -1105,7 +1130,13 @@ function handleBridgeRequest_(e) {
 
   var result = { ok: false, error: "Unknown action: " + action };
   try {
-    if (action === "getDashboardData") {
+    if (action === "verifyGoogleLogin") {
+      result = verifyGoogleLogin(params.idToken || "");
+    } else {
+      var authCheck = verifyGoogleLogin(params.idToken || "");
+      if (!authCheck.ok) {
+        result = { ok: false, error: authCheck.error || "Login required." };
+      } else if (action === "getDashboardData") {
       result = getDashboardData(params.monthKey || params.month || "");
     } else if (action === "saveTransaction") {
       var txPayload = params.payload;
@@ -1167,6 +1198,7 @@ function handleBridgeRequest_(e) {
       var profP = params.profile;
       if (typeof profP === "string") { try { profP = JSON.parse(profP); } catch (er2) { profP = {}; } }
       result = updateUserProfileOnSheet(profP || params);
+      }
     }
   } catch (err) {
     result = { ok: false, error: err && err.message ? err.message : String(err) };
