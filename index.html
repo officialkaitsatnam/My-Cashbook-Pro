@@ -20,16 +20,8 @@
     body { margin: 0; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
     .container { max-width: 900px; margin: 0 auto; padding: 6px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; }
-    .auth-wrap { max-width: 375px; margin: 6px auto; }
-    .brand-head { text-align: center; margin-bottom: 8px; }
-    .wallet-icon {
-      width: 36px; height: 36px; border-radius: 9px; background: #1d4ed8; color: #fff;
-      display: inline-flex; align-items: center; justify-content: center; margin-bottom: 3px;
-    }
-    .brand-title { font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -0.3px; }
-    .brand-sub { color: var(--muted); font-size: 11.5px; margin-top: 1px; }
     h2 { font-size: 15.5px; margin: 0 0 2px; }
-    .sub { color: var(--muted); font-size: 11.5px; margin-bottom: 7px; }
+    .sub { color: var(--muted); font-size: 11.5px; margin-bottom: 6px; }
     .field { margin-bottom: 6px; }
     label { display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 2px; color: #1f2937; }
     input, select {
@@ -43,10 +35,9 @@
     }
     .btn:active { opacity: 0.9; }
     .btn-secondary { background: #eff6ff; color: var(--accent); }
+    .btn-danger { background: #fef2f2; color: var(--red); }
     .btn-sm { width: auto; padding: 4px 8px; font-size: 11.5px; border-radius: 6px; }
     .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 6px; }
-    .auth-footer { text-align: center; margin-top: 7px; font-size: 12px; color: var(--muted); }
-    .link-btn { background: none; border: none; color: var(--accent); font-weight: 600; cursor: pointer; padding: 0; font-size: 12px; }
     .tabs { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 3px; margin-bottom: 6px; }
     .tab { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 11.5px; white-space: nowrap; font-weight: 600; }
     .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -75,172 +66,78 @@
 <body>
 <div class="container">
 
-  <!-- 1. LOGIN & REGISTER SYSTEM -->
-  <div id="authSection" class="auth-wrap">
-
-    <!-- Login Card -->
-    <div id="loginCard" class="card">
-      <div class="brand-head">
-        <div class="wallet-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <rect x="2" y="5" width="20" height="14" rx="3"></rect>
-            <path d="M16 12h6"></path>
-            <circle cx="16" cy="12" r="1" fill="currentColor"></circle>
-          </svg>
-        </div>
-        <h1 class="brand-title">Cashbook</h1>
-        <div class="brand-sub">Manage your money smartly</div>
+  <!-- DIRECT CASHBOOK & UDHAR KHATA APP (NO LOGIN SCREEN) -->
+  <div class="card no-print">
+    <div class="toolbar">
+      <div>
+        <h2>MyCashbook Pro</h2>
+        <div class="sub" style="margin:0;">Direct Open • Fast Offline Mode • English Labels • Hindi Entries</div>
       </div>
-
-      <h2>Login</h2>
-      <div class="sub">Sign in with PIN or Password</div>
-
-      <div id="pinLoginBox">
-        <div class="field">
-          <label for="loginPin">Security PIN</label>
-          <input type="password" id="loginPin" inputmode="numeric" maxlength="6" placeholder="Enter 4-6 digit PIN" />
-        </div>
-        <div style="text-align:right; margin-bottom:6px;">
-          <button type="button" class="link-btn" onclick="setLoginMethod('password')">Login with Password</button>
-        </div>
-        <button type="button" class="btn" onclick="loginPin()">Unlock with PIN</button>
-      </div>
-
-      <div id="passwordLoginBox" class="hidden">
-        <div class="field">
-          <label for="loginEmail">Email Address</label>
-          <input type="email" id="loginEmail" placeholder="Enter email" />
-        </div>
-        <div class="field">
-          <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" placeholder="Enter password" />
-        </div>
-        <div style="text-align:right; margin-bottom:6px;">
-          <button type="button" class="link-btn" onclick="setLoginMethod('pin')">Login with PIN instead</button>
-        </div>
-        <button type="button" class="btn" onclick="loginPassword()">Login</button>
-      </div>
-
-      <div class="auth-footer">
-        New user? <button type="button" class="link-btn" onclick="showAuth('signup')">Register</button>
+      <div style="display:flex; gap:4px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="exportCSV()">Excel</button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="window.print()">Print</button>
       </div>
     </div>
 
-    <!-- Register Card -->
-    <div id="signupCard" class="card hidden">
-      <h2>Register</h2>
-      <div class="sub">Create account with PIN & Password</div>
+    <div id="monthTabs" class="tabs"></div>
 
-      <div class="field">
-        <label for="regName">Full Name</label>
-        <input type="text" id="regName" placeholder="Full name" />
-      </div>
-      <div class="field">
-        <label for="regEmail">Email Address</label>
-        <input type="email" id="regEmail" placeholder="Email address" />
-      </div>
-      <div class="field">
-        <label for="regPassword">Password</label>
-        <input type="password" id="regPassword" placeholder="Create password" />
-      </div>
-      <div class="field">
-        <label for="regConfirmPassword">Confirm Password</label>
-        <input type="password" id="regConfirmPassword" placeholder="Confirm password" />
-      </div>
-      <div class="row">
-        <div class="field">
-          <label for="regPin">Security PIN</label>
-          <input type="password" id="regPin" inputmode="numeric" maxlength="6" placeholder="4-6 digit PIN" />
-        </div>
-        <div class="field">
-          <label for="regConfirmPin">Confirm PIN</label>
-          <input type="password" id="regConfirmPin" inputmode="numeric" maxlength="6" placeholder="Confirm PIN" />
-        </div>
-      </div>
-
-      <button type="button" class="btn" onclick="registerUser()">Register</button>
-      <div class="auth-footer">
-        Already registered? <button type="button" class="link-btn" onclick="showAuth('login')">Login</button>
-      </div>
+    <div class="row">
+      <div class="kpi"><span>Carry-Forward</span><div class="val" id="valCarry">₹0</div></div>
+      <div class="kpi"><span>Cash In</span><div class="val" style="color:var(--green);" id="valIn">₹0</div></div>
+      <div class="kpi"><span>Cash Out</span><div class="val" style="color:var(--red);" id="valOut">₹0</div></div>
+      <div class="kpi"><span>Net Udhar Khata</span><div class="val" style="color:var(--accent);" id="valUdhar">₹0</div></div>
     </div>
-
   </div>
 
-  <!-- 2. CASHBOOK & UDHAR KHATA APP -->
-  <div id="appSection" class="hidden">
-    <div class="card no-print">
-      <div class="toolbar">
-        <div>
-          <h2 id="appHeaderName">MyCashbook Pro</h2>
-          <div class="sub" style="margin:0;">Fast Offline Mode • English Labels • Hindi Entries</div>
-        </div>
-        <div style="display:flex; gap:4px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm btn-secondary" onclick="exportCSV()">Excel</button>
-          <button type="button" class="btn btn-sm btn-secondary" onclick="window.print()">Print</button>
-          <button type="button" class="btn btn-sm" onclick="lockScreen()">Lock</button>
-        </div>
+  <div class="card no-print">
+    <h2>Add Entry</h2>
+    <div class="row">
+      <div class="field"><label for="fDate">Date</label><input type="date" id="fDate" /></div>
+      <div class="field">
+        <label for="fType">Type</label>
+        <select id="fType">
+          <option value="CASH_IN">Cash In (आवक)</option>
+          <option value="CASH_OUT">Cash Out (खर्च)</option>
+          <option value="UDHAR_GIVEN">Udhar Given (उधार दिया)</option>
+          <option value="UDHAR_TAKEN">Udhar Taken (उधार लिया)</option>
+        </select>
       </div>
+      <div class="field"><label for="fAmount">Amount (₹)</label><input type="number" id="fAmount" min="0" step="0.01" placeholder="0.00" /></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="fParty">Party / Name</label><input type="text" id="fParty" placeholder="उदा. रमेश / Name" /></div>
+      <div class="field"><label for="fNote">Remark</label><input type="text" id="fNote" placeholder="उदा. विवरण / Note" /></div>
+    </div>
+    <button type="button" class="btn" onclick="addTxn()">Save Entry</button>
+  </div>
 
-      <div id="monthTabs" class="tabs"></div>
-
-      <div class="row">
-        <div class="kpi"><span>Carry-Forward</span><div class="val" id="valCarry">₹0</div></div>
-        <div class="kpi"><span>Cash In</span><div class="val" style="color:var(--green);" id="valIn">₹0</div></div>
-        <div class="kpi"><span>Cash Out</span><div class="val" style="color:var(--red);" id="valOut">₹0</div></div>
-        <div class="kpi"><span>Net Udhar Khata</span><div class="val" style="color:var(--accent);" id="valUdhar">₹0</div></div>
+  <div class="card">
+    <div class="toolbar">
+      <h2 id="tableTitle" style="margin:0;">Recent Entries (Last 5)</h2>
+      <div class="no-print" style="display:flex; gap:4px;">
+        <select id="fFilter" onchange="renderDashboard()" style="width:auto; padding:4px 8px; font-size:11.5px;">
+          <option value="ALL">All</option>
+          <option value="UDHAR">Udhar Khata</option>
+          <option value="CASH">Cashbook</option>
+        </select>
+        <button type="button" class="btn btn-sm btn-secondary" id="btnToggleRows" onclick="toggleAllRows()">Show All</button>
       </div>
     </div>
-
-    <div class="card no-print">
-      <h2>Add Entry</h2>
-      <div class="row">
-        <div class="field"><label for="fDate">Date</label><input type="date" id="fDate" /></div>
-        <div class="field">
-          <label for="fType">Type</label>
-          <select id="fType">
-            <option value="CASH_IN">Cash In (आवक)</option>
-            <option value="CASH_OUT">Cash Out (खर्च)</option>
-            <option value="UDHAR_GIVEN">Udhar Given (उधार दिया)</option>
-            <option value="UDHAR_TAKEN">Udhar Taken (उधार लिया)</option>
-          </select>
-        </div>
-        <div class="field"><label for="fAmount">Amount (₹)</label><input type="number" id="fAmount" min="0" step="0.01" placeholder="0.00" /></div>
-      </div>
-      <div class="row">
-        <div class="field"><label for="fParty">Party / Name</label><input type="text" id="fParty" placeholder="उदा. रमेश / Name" /></div>
-        <div class="field"><label for="fNote">Remark</label><input type="text" id="fNote" placeholder="उदा. विवरण / Note" /></div>
-      </div>
-      <button type="button" class="btn" onclick="addTxn()">Save Entry</button>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Party</th><th>Type</th><th>Remark</th><th>Amount</th><th class="no-print">Edit</th>
+          </tr>
+        </thead>
+        <tbody id="txnBody"></tbody>
+      </table>
     </div>
+  </div>
 
-    <div class="card">
-      <div class="toolbar">
-        <h2 id="tableTitle" style="margin:0;">Recent Entries (Last 5)</h2>
-        <div class="no-print" style="display:flex; gap:4px;">
-          <select id="fFilter" onchange="renderDashboard()" style="width:auto; padding:4px 8px; font-size:11.5px;">
-            <option value="ALL">All</option>
-            <option value="UDHAR">Udhar Khata</option>
-            <option value="CASH">Cashbook</option>
-          </select>
-          <button type="button" class="btn btn-sm btn-secondary" id="btnToggleRows" onclick="toggleAllRows()">Show All</button>
-        </div>
-      </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th><th>Party</th><th>Type</th><th>Remark</th><th>Amount</th><th class="no-print">Edit</th>
-            </tr>
-          </thead>
-          <tbody id="txnBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card no-print">
-      <h2>Monthly Summary</h2>
-      <div id="chartArea" class="bar-chart"></div>
-    </div>
+  <div class="card no-print">
+    <h2>Monthly Summary</h2>
+    <div id="chartArea" class="bar-chart"></div>
   </div>
 
 </div>
@@ -265,15 +162,15 @@
     <div class="field"><label>Remark</label><input type="text" id="eNote" /></div>
     <div style="display:flex; gap:6px; margin-top:8px;">
       <button type="button" class="btn" onclick="saveTxnEdit()">Update</button>
+      <button type="button" class="btn btn-danger" onclick="deleteTxnEdit()">Delete</button>
       <button type="button" class="btn btn-secondary" onclick="closeEdit()">Cancel</button>
     </div>
   </div>
 </div>
 
 <script>
-  const STORE_KEY = "mycashbook_pro_v7";
+  const STORE_KEY = "mycashbook_pro_direct_v8";
   let store = JSON.parse(localStorage.getItem(STORE_KEY) || "null") || {
-    user: null,
     activeMonth: new Date().toISOString().slice(0, 7),
     months: [new Date().toISOString().slice(0, 7)],
     txns: []
@@ -284,78 +181,11 @@
     localStorage.setItem(STORE_KEY, JSON.stringify(store));
   }
 
-  function showAuth(view) {
-    document.getElementById("loginCard").classList.toggle("hidden", view !== "login");
-    document.getElementById("signupCard").classList.toggle("hidden", view !== "signup");
-  }
-
-  function setLoginMethod(method) {
-    document.getElementById("pinLoginBox").classList.toggle("hidden", method !== "pin");
-    document.getElementById("passwordLoginBox").classList.toggle("hidden", method !== "password");
-  }
-
-  function registerUser() {
-    const name = document.getElementById("regName").value.trim();
-    const email = document.getElementById("regEmail").value.trim().toLowerCase();
-    const password = document.getElementById("regPassword").value;
-    const confirmPassword = document.getElementById("regConfirmPassword").value;
-    const pin = document.getElementById("regPin").value.trim();
-    const confirmPin = document.getElementById("regConfirmPin").value.trim();
-
-    if (!name || !email || !password || !pin) return alert("Please fill Name, Email, Password, and PIN.");
-    if (password !== confirmPassword) return alert("Passwords do not match.");
-    if (!/^\d{4,6}$/.test(pin) || pin !== confirmPin) return alert("PIN must be 4-6 digits and match Confirm PIN.");
-
-    store.user = { name, email, password, pin };
-    saveStore();
-    enterApp();
-  }
-
-  function loginPin() {
-    const pin = document.getElementById("loginPin").value.trim();
-    if (!store.user) {
-      alert("Account not found. Please register first.");
-      return showAuth("signup");
-    }
-    if (pin !== store.user.pin) return alert("Wrong PIN.");
-    document.getElementById("loginPin").value = "";
-    enterApp();
-  }
-
-  function loginPassword() {
-    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
-    const password = document.getElementById("loginPassword").value;
-    if (!store.user) {
-      alert("Account not found. Please register first.");
-      return showAuth("signup");
-    }
-    if (email !== store.user.email || password !== store.user.password) return alert("Wrong Email or Password.");
-    document.getElementById("loginPassword").value = "";
-    enterApp();
-  }
-
-  function lockScreen() {
-    document.getElementById("appSection").classList.add("hidden");
-    document.getElementById("authSection").classList.remove("hidden");
-    showAuth("login");
-    setLoginMethod("pin");
-  }
-
   function addMonthIfMissing(ym) {
     if (!store.months.includes(ym)) {
       store.months.push(ym);
       store.months.sort();
     }
-  }
-
-  function enterApp() {
-    document.getElementById("authSection").classList.add("hidden");
-    document.getElementById("appSection").classList.remove("hidden");
-    document.getElementById("appHeaderName").textContent = `${store.user.name} — Cashbook`;
-    const today = new Date().toISOString().slice(0, 10);
-    document.getElementById("fDate").value = today;
-    addMonthIfMissing(today.slice(0, 7));
-    renderDashboard();
   }
 
   function txnDelta(t) {
@@ -412,6 +242,14 @@
     const ym = date.slice(0, 7);
     addMonthIfMissing(ym);
     store.txns[idx] = { ...store.txns[idx], date, month: ym, type, amount, party, note };
+    saveStore();
+    closeEdit();
+    renderDashboard();
+  }
+
+  function deleteTxnEdit() {
+    const id = document.getElementById("eId").value;
+    store.txns = store.txns.filter(x => x.id !== id);
     saveStore();
     closeEdit();
     renderDashboard();
@@ -493,12 +331,11 @@
     a.click();
   }
 
-  if (!store.user) {
-    showAuth("signup");
-  } else {
-    showAuth("login");
-    setLoginMethod("pin");
-  }
+  // Direct boot with zero login screen
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById("fDate").value = today;
+  addMonthIfMissing(today.slice(0, 7));
+  renderDashboard();
 </script>
 </body>
 </html>

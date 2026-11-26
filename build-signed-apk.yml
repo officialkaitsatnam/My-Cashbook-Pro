@@ -29,7 +29,7 @@ jobs:
           npx cap add android || true
           npx cap sync android
 
-      - name: Apply App Icon from assets/icon.png
+      - name: Apply App Icon & Adaptive Icon from assets/
         run: |
           npx capacitor-assets generate --android --iconBackgroundColor '#0a2e7a' --splashBackgroundColor '#0a2e7a'
 
