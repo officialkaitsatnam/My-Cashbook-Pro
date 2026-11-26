@@ -1,4 +1,4 @@
-name: Build Signed Release APK
+name: Auto Build Signed Release APK
 
 on:
   push:
@@ -6,11 +6,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -24,35 +23,34 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Dependencies & Init Android
+      - name: Install Capacitor & Sync Android
         run: |
           npm install
           npx cap add android || true
           npx cap sync android
 
-      - name: Generate App Icons & Splash from assets/icon.png
+      - name: Apply App Icon from assets/icon.png
         run: |
-          if [ -f "assets/icon.png" ]; then
-            npx capacitor-assets generate --android --iconBackgroundColor '#0b3b9c' --splashBackgroundColor '#0b3b9c'
-          fi
+          npx capacitor-assets generate --android --iconBackgroundColor '#0a2e7a' --splashBackgroundColor '#0a2e7a'
 
-      - name: Decode Keystore from GitHub Secret
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Auto-Generate Release Keystore
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release-key.jks
+          keytool -genkeypair -v -keystore android/app/auto-release.jks \
+            -keyalg RSA -keysize 2048 -validity 10000 -alias mycashbook \
+            -storepass Cashbook@2026 -keypass Cashbook@2026 \
+            -dname "CN=MyCashbook Pro, OU=App, O=MyCashbook, L=India, S=HR, C=IN"
 
-      - name: Inject Signing Config & ProGuard Optimization into build.gradle
+      - name: Enable Signing & R8 Speed Optimization
         run: |
           cat << 'EOF' >> android/app/build.gradle
 
           android {
               signingConfigs {
                   release {
-                      storeFile file("release-key.jks")
-                      storePassword System.getenv("KEYSTORE_PASSWORD")
-                      keyAlias System.getenv("KEY_ALIAS")
-                      keyPassword System.getenv("KEY_PASSWORD")
+                      storeFile file("auto-release.jks")
+                      storePassword "Cashbook@2026"
+                      keyAlias "mycashbook"
+                      keyPassword "Cashbook@2026"
                   }
               }
               buildTypes {
@@ -67,10 +65,6 @@ jobs:
           EOF
 
       - name: Build Signed Release APK
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
           chmod +x gradlew
@@ -79,5 +73,5 @@ jobs:
       - name: Upload Signed APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MyCashbook-Pro-Signed-Release-APK
+          name: MyCashbook-Pro-Signed-APK
           path: android/app/build/outputs/apk/release/app-release.apk
