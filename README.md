@@ -1,7 +1,8 @@
-# MyCashbook Pro — Direct Open + Icon + Fast APK (No Login)
+# My Cashbook Pro — Install-Ready GitHub APK Setup
 
-## Included Files
-- `www/index.html` — Login/Register system completely removed (app opens directly into Cashbook & Udhar Khata), fast offline speed, compact spacing, Monthly tabs, Carry-Forward balance, Last 5 entries view, Hindi/English entries, Popup Edit/Delete, Excel export, Portrait print.
-- `assets/icon.png` & `assets/icon-only.png` — 1024x1024 crisp wallet + growth bar + gold coin app icon for standard and Android adaptive launcher icons.
-- `.github/workflows/build-signed-apk.yml` — Automatically generates all Android mipmap/adaptive icons, applies R8 speed optimization, signs the APK, and uploads `app-release.apk`.
-- `package.json` & `capacitor.config.json` — Android Capacitor build configuration.
+Is ZIP mein aapke poore setup (`index.html`, Google Sheets `Code.gs`, Google Login + PIN, Udhaar Khata) ko Android APK ke liye properly structure kar diya gaya hai:
+
+- `www/index.html` & `www/icon.png` — Capacitor Android app ke liye web directory (CDN preconnect + deferred scripts ke saath fast startup).
+- `assets/icon.png` & `assets/icon-only.png` — Aapka custom app icon, jisse build ke time Android launcher aur adaptive icons generate hote hain.
+- `.github/workflows/build-signed-apk.yml` — Sahi GitHub Actions path par rakha gaya hai taaki push karte hi **Auto Build Signed Release APK** run ho aur R8 optimization ke saath `app-release.apk` bane.
+- `Code.gs`, `GOOGLE-LOGIN-SETUP.md`, `SETUP-GUIDE.md` — Aapki poori Google Apps Script backend aur setup files surakshit hain.
