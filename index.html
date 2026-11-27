@@ -881,7 +881,7 @@
       var hasGasHost = Boolean(window.google && google.script && google.script.run);
       var hasGasUrl = Boolean(getConfiguredGasUrl());
       if (!hasGasHost && !hasGasUrl) {
-        setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>Apps Script Web App URL set nahi hai. Top bar ke Link icon par click karke URL dalein.</td></tr>");
+        setHtml("tableBody", "<tr><td colspan='8' class='text-center text-danger py-4'>Apps Script Web App URL is not configured. Top bar ke Link icon par click karke URL dalein.</td></tr>");
         return;
       }
       runBackend("getDashboardData", [month], function(data) {
@@ -1363,7 +1363,7 @@
       var baseUrl = getConfiguredGasUrl();
       if (!baseUrl) {
         if (typeof onFailure === "function") {
-          onFailure(new Error("Apps Script Web App URL set nahi hai."));
+          onFailure(new Error("Apps Script Web App URL is not configured."));
         }
         return;
       }
@@ -1442,6 +1442,18 @@
         mapped = { id: args[0] };
       } else if (methodName === "getExcelExportInfo") {
         mapped = { monthKey: args[0] || "" };
+      } else if (methodName === "registerAccountOnSheet") {
+        mapped = { payload: args[0] || {} };
+      } else if (methodName === "loginAccountOnSheet") {
+        mapped = { email: args[0] || "", password: args[1] || "" };
+      } else if (methodName === "verifyGoogleLogin") {
+        mapped = { payload: args[0] || {} };
+      } else if (methodName === "sendPasswordResetOtp") {
+        mapped = { email: args[0] || "" };
+      } else if (methodName === "resetPasswordWithOtp") {
+        mapped = { email: args[0] || "", otp: args[1] || "", newPassword: args[2] || "" };
+      } else if (methodName === "updateUserProfileOnSheet") {
+        mapped = { profile: args[0] || {} };
       } else if (methodName === "removeTempExportSheet") {
         if (typeof onSuccess === "function") onSuccess({ ok: true });
         return;
@@ -1455,11 +1467,11 @@
       if (entered !== null) {
         var trimmed = entered.trim();
         if (trimmed && trimmed.indexOf("https://script.google.com/") !== 0) {
-          alert("Kripya valid https://script.google.com/.../exec URL dalein.");
+          alert("Please enter a valid https://script.google.com/.../exec URL.");
           return;
         }
         setConfiguredGasUrl(trimmed);
-        showAlert(trimmed ? "Apps Script URL save ho gayi! Data sync ho raha hai..." : "Apps Script URL clear kar di gayi.");
+        showAlert(trimmed ? "Apps Script URL saved! Syncing data..." : "Apps Script URL cleared.");
         loadData();
         syncUdhaarFromCloud(true);
       }
