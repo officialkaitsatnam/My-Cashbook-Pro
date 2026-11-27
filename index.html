@@ -3,20 +3,17 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="preconnect" href="https://script.google.com" crossorigin>
-  <link rel="dns-prefetch" href="https://accounts.google.com">
-  <link rel="icon" type="image/png" href="icon.png">
-  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b49b8">
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
   <title>My Cashbook — Smart Money & Udhaar Ledger</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root { --bg-canvas: #edf3fb; --surface: #ffffff; --ink-main: #0f172a; }
     body { background: linear-gradient(135deg, #e7effa 0%, #f4f8fd 50%, #e4eefb 100%); font-family: "Segoe UI", "Nirmala UI", system-ui, sans-serif; color: var(--ink-main); margin: 0; padding: 0; min-height: 100vh; }
@@ -28,7 +25,8 @@
 
     .app-shell { display: flex; min-height: 100vh; }
     .side-rail { width: 156px; flex-shrink: 0; background: linear-gradient(180deg, #dce8f8 0%, #eef4fc 45%, #e3edf9 100%); border-right: 1px solid rgba(148, 163, 184, 0.25); padding: 16px 12px 20px; display: flex; flex-direction: column; justify-content: space-between; position: sticky; top: 0; height: 100vh; }
-    .side-wallet-logo { width: 66px; height: 58px; border-radius: 16px; background: linear-gradient(145deg, #0b49b8 0%, #2563eb 65%, #38bdf8 135%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 14px; box-shadow: 0 10px 22px rgba(11, 73, 184, 0.28); border: 2px solid rgba(255, 255, 255, 0.75); }
+    .side-wallet-logo { width: 66px; height: 66px; border-radius: 18px; overflow: hidden; margin: 0 auto 14px; box-shadow: 0 10px 22px rgba(11, 73, 184, 0.28); border: 2px solid rgba(255, 255, 255, 0.85); background: #062a78; }
+    .side-wallet-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .side-nav-btn { width: 100%; border: none; background: transparent; color: #1e293b; border-radius: 14px; padding: 9px 10px; margin-bottom: 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; }
     .side-nav-btn:hover { background: rgba(255, 255, 255, 0.7); color: #0b49b8; }
     .side-nav-btn.active { background: linear-gradient(135deg, #0945b0 0%, #1d74f5 100%); color: #ffffff; box-shadow: 0 8px 18px rgba(13, 84, 199, 0.28); }
@@ -84,6 +82,7 @@
     .footer-ribbon { margin-top: 18px; background: linear-gradient(90deg, #062873 0%, #0b49b8 50%, #062873 100%); color: #fff; border-radius: 16px; padding: 9px 18px; text-align: center; font-size: 13px; font-weight: 700; }
     .mobile-dock { display: none; }
     #pinLockOverlay { position: fixed; inset: 0; z-index: 9999; background: #0f172a; color: #f8fafc; display: none; align-items: center; justify-content: center; padding: 20px; }
+    #authGateOverlay { position: fixed; inset: 0; z-index: 9990; background: linear-gradient(135deg, #062a78 0%, #0b49b8 100%); display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
     .print-title { display: none; }
 
     @media (max-width: 768px) {
@@ -98,100 +97,32 @@
       body.dark-mode .mobile-dock button { color: #e2e8f0; }
     }
 
-    /* Bank-Statement Print Layout: Single-line Description, Side-by-Side KPIs, Dense Single-Page Fit */
     @media print {
       @page { size: A4 portrait; margin: 6mm; }
       body { background: #fff !important; font-size: 9px !important; line-height: 1.15 !important; color: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .side-rail, .top-ribbon, .search-pill, .filter-pill-btn, .range-pill-btn, .big-credit-btn, .big-debit-btn, .no-print, .mobile-dock, .footer-ribbon, #pinLockOverlay { display: none !important; }
+      .side-rail, .top-ribbon, .search-pill, .filter-pill-btn, .range-pill-btn, .big-credit-btn, .big-debit-btn, .no-print, .mobile-dock, .footer-ribbon, #pinLockOverlay, #authGateOverlay { display: none !important; }
       .main-workspace { padding: 0 !important; width: 100% !important; }
-
-      .print-title {
-        display: block !important;
-        background: linear-gradient(90deg, #062873 0%, #0b49b8 100%) !important;
-        color: #ffffff !important;
-        border-radius: 7px;
-        padding: 6px 10px;
-        margin-bottom: 6px;
-      }
-      .print-header-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-        padding-bottom: 3px;
-        margin-bottom: 3px;
-      }
+      .print-title { display: block !important; background: linear-gradient(90deg, #062873 0%, #0b49b8 100%) !important; color: #ffffff !important; border-radius: 7px; padding: 6px 10px; margin-bottom: 6px; }
+      .print-header-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.3); padding-bottom: 3px; margin-bottom: 3px; }
       .print-header-top h4 { font-size: 12px !important; margin: 0 !important; }
-      .print-header-sub {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        font-size: 8.5px !important;
-        color: #e2e8f0 !important;
-      }
-
-      /* Force KPI cards side-by-side (left to right) in one compact horizontal row */
-      #statementSection > .row.g-3.mb-3,
-      #udhaarSection > .row.g-3.mb-3 {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 6px !important;
-        margin-bottom: 6px !important;
-      }
-      #statementSection > .row.g-3.mb-3 > [class*="col-"],
-      #udhaarSection > .row.g-3.mb-3 > [class*="col-"] {
-        flex: 1 1 0 !important;
-        width: 33.333% !important;
-        max-width: 33.333% !important;
-        padding: 0 !important;
-      }
-      .kpi-box {
-        padding: 5px 8px !important;
-        gap: 6px !important;
-        border-radius: 7px !important;
-        box-shadow: none !important;
-        border: 1px solid #94a3b8 !important;
-      }
-      .kpi-circle-icon {
-        width: 24px !important;
-        height: 24px !important;
-        font-size: 11px !important;
-      }
+      .print-header-sub { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 8.5px !important; color: #e2e8f0 !important; }
+      #statementSection > .row.g-3.mb-3, #udhaarSection > .row.g-3.mb-3 { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; gap: 6px !important; margin-bottom: 6px !important; }
+      #statementSection > .row.g-3.mb-3 > [class*="col-"], #udhaarSection > .row.g-3.mb-3 > [class*="col-"] { flex: 1 1 0 !important; width: 33.333% !important; max-width: 33.333% !important; padding: 0 !important; }
+      .kpi-box { padding: 5px 8px !important; gap: 6px !important; border-radius: 7px !important; box-shadow: none !important; border: 1px solid #94a3b8 !important; }
+      .kpi-circle-icon { width: 24px !important; height: 24px !important; font-size: 11px !important; }
       .kpi-label { font-size: 8.5px !important; }
       .kpi-amount { font-size: 11px !important; }
       .kpi-box .small { display: none !important; }
-
       .ledger-card { box-shadow: none !important; border: 1px solid #64748b !important; border-radius: 7px !important; }
       .ledger-top-bar { background: #0b2349 !important; padding: 5px 10px !important; }
       .ledger-top-bar .fs-5 { font-size: 11px !important; }
       .ledger-body-pad { padding: 5px 6px !important; }
       .table-responsive { overflow: visible !important; }
-
-      .ledger-table {
-        width: 100% !important;
-        table-layout: fixed !important;
-        border-collapse: collapse !important;
-      }
+      .ledger-table { width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; }
       .ledger-table thead { display: table-header-group; }
       .ledger-table tr { break-inside: avoid; page-break-inside: avoid; }
-      .ledger-table thead th {
-        background: #0b2349 !important;
-        color: #fff !important;
-        font-size: 8.5px !important;
-        padding: 3.5px 4px !important;
-        white-space: nowrap !important;
-      }
-      .ledger-table tbody td {
-        padding: 2.5px 4px !important;
-        font-size: 8.5px !important;
-        line-height: 1.15 !important;
-        border: 0.5px solid #cbd5e1 !important;
-      }
-
-      /* Column widths for crisp single-line Description & bank-statement layout */
+      .ledger-table thead th { background: #0b2349 !important; color: #fff !important; font-size: 8.5px !important; padding: 3.5px 4px !important; white-space: nowrap !important; }
+      .ledger-table tbody td { padding: 2.5px 4px !important; font-size: 8.5px !important; line-height: 1.15 !important; border: 0.5px solid #cbd5e1 !important; }
       .ledger-table th:nth-child(1), .ledger-table td:nth-child(1) { width: 5% !important; white-space: nowrap !important; }
       .ledger-table th:nth-child(2), .ledger-table td:nth-child(2) { width: 14% !important; white-space: nowrap !important; }
       .ledger-table th:nth-child(3), .ledger-table td:nth-child(3) { width: 15% !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
@@ -199,41 +130,63 @@
       .ledger-table th:nth-child(5), .ledger-table td:nth-child(5) { width: 11% !important; white-space: nowrap !important; }
       .ledger-table th:nth-child(6), .ledger-table td:nth-child(6) { width: 10% !important; white-space: nowrap !important; }
       .ledger-table th:nth-child(7), .ledger-table td:nth-child(7) { width: 12% !important; white-space: nowrap !important; }
-
       .closing-tag { display: none !important; }
-      .bal-chip, .cat-pill {
-        font-size: 8px !important;
-        padding: 1px 4px !important;
-        background: transparent !important;
-        border: none !important;
-        color: #0f172a !important;
-        font-weight: 700 !important;
-      }
+      .bal-chip, .cat-pill { font-size: 8px !important; padding: 1px 4px !important; background: transparent !important; border: none !important; color: #0f172a !important; font-weight: 700 !important; }
       .bal-chip { color: #0b49b8 !important; font-weight: 800 !important; }
     }
   </style>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <style>
-    #cb-auth-gate{position:fixed;inset:0;z-index:20000;background:linear-gradient(135deg,#071a36,#123d78);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Arial,sans-serif}
-    #cb-auth-gate .cb-auth-card{width:100%;max-width:390px;background:#fff;border-radius:18px;padding:28px 24px;text-align:center;box-shadow:0 18px 55px #0005}
-    #cb-auth-gate .cb-auth-mark{width:64px;height:64px;object-fit:contain;margin-bottom:10px}
-    #cb-auth-gate h2{font-size:22px;color:#0b2349;margin:4px 0 8px;font-weight:800}
-    #cb-auth-gate p{font-size:14px;color:#64748b;margin:0 0 18px}
-    #cb-auth-error{font-size:13px;color:#b91c1c;min-height:20px;margin-top:12px}
-    body.cb-auth-locked{overflow:hidden}
-    body.cb-auth-locked>#pinLockOverlay{display:none!important}
-  </style>
 </head>
-<body class="cb-auth-locked">
-  <div id="cb-auth-gate">
-    <div class="cb-auth-card">
-      <img class="cb-auth-mark" src="icon.png" alt="My Cashbook Pro">
-      <h2>My Cashbook Pro</h2>
-      <p>Apni private Cashbook kholne ke liye Google se sign in karein.</p>
-      <div id="cb-google-signin" style="display:flex;justify-content:center;min-height:44px;"></div>
-      <div id="cb-auth-error" role="alert"></div>
+<body>
+  <!-- Google Sign-In + Email/Password + OTP Gate -->
+  <div id="authGateOverlay">
+    <div class="card p-4 shadow-lg border-0 rounded-4" style="width:100%;max-width:420px;">
+      <div class="text-center mb-3">
+        <img src="icon.png" alt="My Cashbook Pro" class="rounded-4 shadow-sm mb-2" style="width:68px;height:68px;object-fit:cover;">
+        <h4 class="fw-bold m-0 text-primary">My Cashbook Pro</h4>
+        <div class="small text-muted">Google Login, Email/Password &amp; OTP Reset</div>
+      </div>
+
+      <div id="authStatusMsg" class="alert alert-danger py-2 px-3 small" style="display:none;"></div>
+
+      <div class="d-flex justify-content-center mb-3">
+        <div id="googleSignInDiv"></div>
+      </div>
+
+      <ul class="nav nav-pills nav-fill mb-3 small">
+        <li class="nav-item"><button type="button" class="nav-link active py-1 fw-bold" id="tabLoginBtn" onclick="switchAuthTab('LOGIN')">Login</button></li>
+        <li class="nav-item"><button type="button" class="nav-link py-1 fw-bold" id="tabRegisterBtn" onclick="switchAuthTab('REGISTER')">Register</button></li>
+        <li class="nav-item"><button type="button" class="nav-link py-1 fw-bold" id="tabOtpBtn" onclick="switchAuthTab('OTP')">OTP Reset</button></li>
+      </ul>
+
+      <form id="emailLoginForm" onsubmit="handleEmailPasswordLogin(event)">
+        <div class="mb-2"><label class="form-label small fw-bold mb-1">Email</label><input type="email" id="loginEmailInput" class="form-control" value="kaitsatnam@gmail.com" required></div>
+        <div class="mb-3"><label class="form-label small fw-bold mb-1">Password</label><input type="password" id="loginPasswordInput" class="form-control" required></div>
+        <button type="submit" id="emailLoginBtn" class="btn btn-primary w-100 fw-bold rounded-pill py-2">Sign In with Email</button>
+      </form>
+
+      <form id="emailRegisterForm" onsubmit="handleAccountRegister(event)" style="display:none;">
+        <div class="mb-2"><label class="form-label small fw-bold mb-1">Full Name</label><input type="text" id="regNameInput" class="form-control" required></div>
+        <div class="mb-2"><label class="form-label small fw-bold mb-1">Email</label><input type="email" id="regEmailInput" class="form-control" required></div>
+        <div class="mb-2"><label class="form-label small fw-bold mb-1">Phone</label><input type="text" id="regPhoneInput" class="form-control"></div>
+        <div class="mb-2"><label class="form-label small fw-bold mb-1">Business</label><input type="text" id="regBusinessInput" class="form-control"></div>
+        <div class="mb-3"><label class="form-label small fw-bold mb-1">Password</label><input type="password" id="regPasswordInput" class="form-control" required></div>
+        <button type="submit" id="emailRegisterBtn" class="btn btn-success w-100 fw-bold rounded-pill py-2">Create Account</button>
+      </form>
+
+      <div id="otpResetWrap" style="display:none;">
+        <div class="input-group mb-2">
+          <input type="email" id="otpEmailInput" class="form-control" placeholder="Registered Email" value="kaitsatnam@gmail.com">
+          <button type="button" class="btn btn-outline-primary fw-bold" onclick="handleSendOtp()">Send OTP</button>
+        </div>
+        <form onsubmit="handleResetPasswordOtp(event)">
+          <div class="mb-2"><input type="text" id="otpCodeInput" maxlength="6" class="form-control text-center fw-bold" placeholder="6-Digit OTP" required></div>
+          <div class="mb-3"><input type="password" id="otpNewPassInput" class="form-control" placeholder="New Password (min 4 chars)" required></div>
+          <button type="submit" class="btn btn-warning text-dark w-100 fw-bold rounded-pill py-2">Reset Password</button>
+        </form>
+      </div>
     </div>
   </div>
+
   <!-- 6-Digit PIN Lock & Professional Reset Overlay -->
   <div id="pinLockOverlay">
     <div class="card p-4 bg-dark text-white border border-secondary shadow-lg" style="width: 100%; max-width: 390px; border-radius: 18px;">
@@ -277,7 +230,7 @@
   <div class="app-shell">
     <aside class="side-rail no-print">
       <div>
-        <div class="side-wallet-logo"><i class="fa-solid fa-wallet"></i></div>
+        <div class="side-wallet-logo"><img src="icon.png" alt="My Cashbook Pro Logo"></div>
         <button type="button" id="navHomeBtn" class="side-nav-btn active" onclick="switchView('STATEMENT', 'navHomeBtn')"><i class="fa-solid fa-house"></i><span>Home</span></button>
         <button type="button" id="navReportsBtn" class="side-nav-btn" onclick="switchView('UDHAAR', 'navReportsBtn')"><i class="fa-solid fa-book-open"></i><span>Udhaar</span></button>
         <button type="button" id="navAnalyticsBtn" class="side-nav-btn" onclick="openChartModal()"><i class="fa-solid fa-chart-pie"></i><span>Analytics</span></button>
@@ -318,6 +271,7 @@
           <button type="button" class="header-icon-btn" onclick="toggleDarkMode()" title="Dark / Light Mode"><i class="fa-solid fa-moon" id="themeIcon"></i></button>
           <button type="button" class="header-icon-btn" onclick="promptAndSaveGasUrl()" title="Connect Apps Script Web App URL"><i class="fa-solid fa-link"></i></button>
           <button type="button" class="header-icon-btn" onclick="openPinModal()" title="6-Digit PIN Settings"><i class="fa-solid fa-key"></i></button>
+          <button type="button" class="header-icon-btn" onclick="logoutCashbookSession()" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
       </header>
 
@@ -683,6 +637,8 @@
     var PIN_STORAGE_KEY = "cashbook_app_pin_6digit_v1";
     var BUDGET_STORAGE_KEY = "cashbook_monthly_budget_v1";
     var CUSTOM_CATS_KEY = "cashbook_custom_categories_v1";
+    var AUTH_SESSION_KEY = "cashbook_auth_session_v1";
+    var GOOGLE_CLIENT_ID = "289553047156-7cbvkp2186bpe9r07huq306jmja7lgis.apps.googleusercontent.com";
     var DEFAULT_CATEGORIES = ["Salary / Income", "Business", "Transport", "Utilities & Bills", "Food & Dining", "Shopping", "Rent & Housing", "General"];
 
     function setText(id, v) { var el = document.getElementById(id); if (el) el.innerText = v; }
@@ -691,6 +647,140 @@
     function escAttr(v) { return escHtml(v).replace(/'/g, "&#39;"); }
     function fmtINR(n) { return "₹" + (Number(n) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function cleanText(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
+
+    function getAuthSession() {
+      try { return JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || "null"); } catch (e) { return null; }
+    }
+    function setAuthSession(obj) {
+      try {
+        if (obj) sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(obj));
+        else sessionStorage.removeItem(AUTH_SESSION_KEY);
+      } catch (e) {}
+    }
+    function showAuthError(msg) {
+      var el = document.getElementById("authStatusMsg");
+      if (!el) return;
+      el.innerText = msg || "";
+      el.style.display = msg ? "block" : "none";
+    }
+    function switchAuthTab(tab) {
+      showAuthError("");
+      ["tabLoginBtn", "tabRegisterBtn", "tabOtpBtn"].forEach(function(id) {
+        var b = document.getElementById(id);
+        if (b) b.classList.remove("active");
+      });
+      document.getElementById("emailLoginForm").style.display = tab === "LOGIN" ? "block" : "none";
+      document.getElementById("emailRegisterForm").style.display = tab === "REGISTER" ? "block" : "none";
+      document.getElementById("otpResetWrap").style.display = tab === "OTP" ? "block" : "none";
+      if (tab === "LOGIN") document.getElementById("tabLoginBtn").classList.add("active");
+      if (tab === "REGISTER") document.getElementById("tabRegisterBtn").classList.add("active");
+      if (tab === "OTP") document.getElementById("tabOtpBtn").classList.add("active");
+    }
+    function initGoogleSignInButton() {
+      var div = document.getElementById("googleSignInDiv");
+      if (!div || !window.google || !google.accounts || !google.accounts.id) return;
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse
+      });
+      google.accounts.id.renderButton(div, { theme: "outline", size: "large", width: 320 });
+    }
+    function handleGoogleCredentialResponse(response) {
+      var cred = response && response.credential ? response.credential : "";
+      if (!cred) {
+        showAuthError("Google sign-in credential nahi mila.");
+        return;
+      }
+      runBackend("verifyGoogleLogin", [{ idToken: cred, credential: cred }], function(res) {
+        if (!res || res.ok === false) {
+          showAuthError((res && res.error) || "Google verification failed.");
+          return;
+        }
+        setAuthSession({ idToken: cred, user: res.user || { email: res.email, name: res.name } });
+        document.getElementById("authGateOverlay").style.display = "none";
+        checkInitialPinLock();
+        loadData();
+        syncUdhaarFromCloud(false);
+      }, function(err) {
+        showAuthError((err && err.message) || String(err));
+      });
+    }
+    function handleEmailPasswordLogin(e) {
+      e.preventDefault();
+      var email = document.getElementById("loginEmailInput").value.trim();
+      var pass = document.getElementById("loginPasswordInput").value;
+      runBackend("loginAccountOnSheet", [email, pass], function(res) {
+        if (!res || res.ok === false) {
+          showAuthError((res && res.error) || "Login failed.");
+          return;
+        }
+        setAuthSession({ user: res.user || { email: email } });
+        document.getElementById("authGateOverlay").style.display = "none";
+        checkInitialPinLock();
+        loadData();
+        syncUdhaarFromCloud(false);
+      }, function(err) {
+        showAuthError((err && err.message) || String(err));
+      });
+    }
+    function handleAccountRegister(e) {
+      e.preventDefault();
+      var payload = {
+        name: document.getElementById("regNameInput").value.trim(),
+        email: document.getElementById("regEmailInput").value.trim(),
+        phone: document.getElementById("regPhoneInput").value.trim(),
+        business: document.getElementById("regBusinessInput").value.trim(),
+        password: document.getElementById("regPasswordInput").value
+      };
+      runBackend("registerAccountOnSheet", [payload], function(res) {
+        if (!res || res.ok === false) {
+          showAuthError((res && res.error) || "Registration failed.");
+          return;
+        }
+        setAuthSession({ user: res.user || { email: payload.email, name: payload.name } });
+        document.getElementById("authGateOverlay").style.display = "none";
+        checkInitialPinLock();
+        loadData();
+        syncUdhaarFromCloud(false);
+      }, function(err) {
+        showAuthError((err && err.message) || String(err));
+      });
+    }
+    function handleSendOtp() {
+      var email = document.getElementById("otpEmailInput").value.trim();
+      runBackend("sendPasswordResetOtp", [email], function(res) {
+        if (!res || res.ok === false) {
+          showAuthError((res && res.error) || "OTP send failed.");
+          return;
+        }
+        showAuthError("");
+        alert(res.message || "OTP sent to email.");
+      }, function(err) {
+        showAuthError((err && err.message) || String(err));
+      });
+    }
+    function handleResetPasswordOtp(e) {
+      e.preventDefault();
+      var email = document.getElementById("otpEmailInput").value.trim();
+      var otp = document.getElementById("otpCodeInput").value.trim();
+      var newPass = document.getElementById("otpNewPassInput").value;
+      runBackend("resetPasswordWithOtp", [email, otp, newPass], function(res) {
+        if (!res || res.ok === false) {
+          showAuthError((res && res.error) || "Password reset failed.");
+          return;
+        }
+        showAuthError("");
+        alert(res.message || "Password updated!");
+        switchAuthTab("LOGIN");
+      }, function(err) {
+        showAuthError((err && err.message) || String(err));
+      });
+    }
+    function logoutCashbookSession() {
+      setAuthSession(null);
+      document.getElementById("authGateOverlay").style.display = "flex";
+      initGoogleSignInButton();
+    }
 
     function getNowIsoLocal() {
       var d = new Date();
@@ -946,7 +1036,6 @@
       }));
     }
 
-    /* Order: S.No. -> Date & Time -> Category -> Description -> Credit -> Debit -> Balance -> Actions */
     function renderTable(list) {
       var total = list.length, btn = document.getElementById("toggleAllBtn"), showList = list;
       if (total > DEFAULT_VISIBLE_LIMIT) {
@@ -1095,7 +1184,6 @@
       }, 200);
     }
 
-    // 6-Digit PIN Functions
     function getSavedPin() { try { return String(localStorage.getItem(PIN_STORAGE_KEY) || "").trim(); } catch (e) { return ""; } }
     function checkInitialPinLock() {
       var saved = getSavedPin();
@@ -1355,72 +1443,23 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-      populateCategoryDatalist(); resetUdhaarDateTimeDefault(); checkInitialPinLock(); loadData(); syncUdhaarFromCloud(false);
+      populateCategoryDatalist();
+      resetUdhaarDateTimeDefault();
+      var sess = getAuthSession();
+      if (!sess || !sess.user) {
+        document.getElementById("authGateOverlay").style.display = "flex";
+        setTimeout(initGoogleSignInButton, 300);
+        return;
+      }
+      checkInitialPinLock();
+      loadData();
+      syncUdhaarFromCloud(false);
     });
   </script>
 
   <script>
-    // Pre-configured Google Apps Script Web App (/exec) URL
     var GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxo2YNdwtaTjk-oG6TwMBufAzBb_omnm9oW4I_wGM6zLxa7osWzgxObUsSenJu5aehM/exec";
     var GAS_URL_STORAGE_KEY = "cashbook_gas_web_app_url_v1";
-
-    // Private single-owner Google Sign-In. Only the configured owner email is accepted.
-    var CASHBOOK_GOOGLE_CLIENT_ID = "289553047156-7cbvkp2186bpe9r07huq306jmja7lgis.apps.googleusercontent.com";
-    var CASHBOOK_OWNER_EMAIL = "kaitsatnam@gmail.com";
-    var CASHBOOK_AUTH_TOKEN_KEY = "mcp_google_id_token_v1";
-    var CASHBOOK_AUTH_EMAIL_KEY = "mcp_google_email_v1";
-
-    function getCashbookIdToken() {
-      try { return localStorage.getItem(CASHBOOK_AUTH_TOKEN_KEY) || ""; } catch (e) { return ""; }
-    }
-    function setCashbookAuth_(token, email) {
-      try { localStorage.setItem(CASHBOOK_AUTH_TOKEN_KEY, token); localStorage.setItem(CASHBOOK_AUTH_EMAIL_KEY, email); } catch (e) {}
-    }
-    function clearCashbookAuth_() {
-      try { localStorage.removeItem(CASHBOOK_AUTH_TOKEN_KEY); localStorage.removeItem(CASHBOOK_AUTH_EMAIL_KEY); } catch (e) {}
-    }
-    function showCashbookAuthError_(message) {
-      var el = document.getElementById("cb-auth-error"); if (el) el.textContent = message || "Login nahi ho paya. Dobara koshish karein.";
-    }
-    function unlockCashbook_() {
-      var gate = document.getElementById("cb-auth-gate"); if (gate) gate.style.display = "none";
-      document.body.classList.remove("cb-auth-locked");
-    }
-    function lockCashbook_() {
-      document.body.classList.add("cb-auth-locked");
-      var gate = document.getElementById("cb-auth-gate"); if (gate) gate.style.display = "flex";
-    }
-    function cashbookGoogleCredential_(response) {
-      var token = response && response.credential ? response.credential : "";
-      if (!token) { showCashbookAuthError_("Google se credential nahi mila."); return; }
-      showCashbookAuthError_("Verifying your account...");
-      callGasJsonp("verifyGoogleLogin", { idToken: token }, function(result) {
-        if (result && result.ok && String(result.email || "").toLowerCase() === CASHBOOK_OWNER_EMAIL) {
-          setCashbookAuth_(token, result.email); unlockCashbook_();
-          if (typeof loadData === "function") loadData();
-          if (typeof syncUdhaarFromCloud === "function") syncUdhaarFromCloud(true);
-        } else { clearCashbookAuth_(); showCashbookAuthError_(result && result.error ? result.error : "Sirf owner account ko access hai."); }
-      }, function(err) { showCashbookAuthError_(err && err.message ? err.message : "Login verification failed."); });
-    }
-    function initializeCashbookGoogleLogin_() {
-      var attempts = 0;
-      var timer = setInterval(function() {
-        attempts++;
-        if (window.google && google.accounts && google.accounts.id) {
-          clearInterval(timer);
-          google.accounts.id.initialize({ client_id: CASHBOOK_GOOGLE_CLIENT_ID, callback: cashbookGoogleCredential_, auto_select: false });
-          google.accounts.id.renderButton(document.getElementById("cb-google-signin"), { theme: "outline", size: "large", shape: "rectangular", text: "signin_with", width: 260 });
-          var savedToken = getCashbookIdToken();
-          if (savedToken) {
-            callGasJsonp("verifyGoogleLogin", { idToken: savedToken }, function(r) {
-              if (r && r.ok && String(r.email || "").toLowerCase() === CASHBOOK_OWNER_EMAIL) { unlockCashbook_(); }
-              else { clearCashbookAuth_(); lockCashbook_(); }
-            }, function() { clearCashbookAuth_(); lockCashbook_(); showCashbookAuthError_("Session expire ho gaya. Dobara Google Login karein."); });
-          }
-        } else if (attempts > 40) { clearInterval(timer); showCashbookAuthError_("Google Sign-In load nahi hua. Internet connection check karein."); }
-      }, 250);
-    }
-    document.addEventListener("DOMContentLoaded", initializeCashbookGoogleLogin_);
 
     function getConfiguredGasUrl() {
       try {
@@ -1449,6 +1488,7 @@
         }
         return;
       }
+      var sess = getAuthSession();
       var cbName = "cb_cashbook_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
       var scriptEl = document.createElement("script");
       var finished = false;
@@ -1480,9 +1520,8 @@
       };
 
       var q = ["action=" + encodeURIComponent(action), "callback=" + encodeURIComponent(cbName), "_t=" + Date.now()];
-      if (action !== "verifyGoogleLogin") {
-        var activeToken = getCashbookIdToken();
-        if (activeToken) q.push("idToken=" + encodeURIComponent(activeToken));
+      if (sess && sess.idToken) {
+        q.push("idToken=" + encodeURIComponent(sess.idToken));
       }
       if (payloadObj && typeof payloadObj === "object") {
         Object.keys(payloadObj).forEach(function(k) {
@@ -1510,7 +1549,17 @@
       }
 
       var mapped = {};
-      if (methodName === "getDashboardData") {
+      if (methodName === "verifyGoogleLogin") {
+        mapped = args[0] || {};
+      } else if (methodName === "loginAccountOnSheet") {
+        mapped = { email: args[0] || "", password: args[1] || "" };
+      } else if (methodName === "registerAccountOnSheet") {
+        mapped = { payload: args[0] || {} };
+      } else if (methodName === "sendPasswordResetOtp") {
+        mapped = { email: args[0] || "" };
+      } else if (methodName === "resetPasswordWithOtp") {
+        mapped = { email: args[0] || "", otp: args[1] || "", newPassword: args[2] || "" };
+      } else if (methodName === "getDashboardData") {
         mapped = { monthKey: args[0] || "" };
       } else if (methodName === "saveTransaction") {
         mapped = { payload: args[0] || {} };
