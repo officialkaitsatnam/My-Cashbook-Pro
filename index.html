@@ -1840,5 +1840,92 @@
 })();
 </script>
 
+
+<script id="instant-speed-engine-v7">
+(function() {
+  var CACHE_DASH_PREFIX = "cb_fast_dash_v7_";
+  var CACHE_UDH_KEY = "cb_fast_udh_v7_all";
+
+  function readLocalCache(key) {
+    try {
+      var raw = localStorage.getItem(key);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return parsed && parsed.data ? parsed.data : null;
+    } catch (e) { return null; }
+  }
+
+  function writeLocalCache(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data: data }));
+    } catch (e) {}
+  }
+
+  // Patch runBackend to serve cached reads instantaneously and refresh in background
+  var origRunBackend = window.runBackend;
+  if (typeof origRunBackend === "function") {
+    window.runBackend = function(methodName, argsArray, onSuccess, onFailure) {
+      var args = Array.isArray(argsArray) ? argsArray : [];
+
+      if (methodName === "getDashboardData") {
+        var mk = String(args[0] || "");
+        var cachedDash = readLocalCache(CACHE_DASH_PREFIX + mk);
+        if (cachedDash && typeof onSuccess === "function") {
+          setTimeout(function() { onSuccess(cachedDash); }, 0);
+        }
+        return origRunBackend(methodName, args, function(res) {
+          if (res && res.ok) writeLocalCache(CACHE_DASH_PREFIX + mk, res);
+          if (!cachedDash && typeof onSuccess === "function") onSuccess(res);
+          else if (cachedDash && res && res.ok && JSON.stringify(res) !== JSON.stringify(cachedDash) && typeof onSuccess === "function") {
+            onSuccess(res);
+          }
+        }, function(err) {
+          if (!cachedDash && typeof onFailure === "function") onFailure(err);
+        });
+      }
+
+      if (methodName === "getUdhaarEntries") {
+        var cachedUdh = readLocalCache(CACHE_UDH_KEY);
+        if (cachedUdh && typeof onSuccess === "function") {
+          setTimeout(function() { onSuccess(cachedUdh); }, 0);
+        }
+        return origRunBackend(methodName, args, function(res) {
+          if (res && res.ok) writeLocalCache(CACHE_UDH_KEY, res);
+          if (!cachedUdh && typeof onSuccess === "function") onSuccess(res);
+          else if (cachedUdh && res && res.ok && JSON.stringify(res) !== JSON.stringify(cachedUdh) && typeof onSuccess === "function") {
+            onSuccess(res);
+          }
+        }, function(err) {
+          if (!cachedUdh && typeof onFailure === "function") onFailure(err);
+        });
+      }
+
+      // On writes, invalidate local cache immediately so next read is fresh
+      if (["saveTransaction", "deleteTransaction", "clearMonthEntries", "saveUdhaarEntry", "settleUdhaarEntry", "deleteUdhaarEntryOnSheet"].indexOf(methodName) !== -1) {
+        try {
+          Object.keys(localStorage).forEach(function(k) {
+            if (k.indexOf(CACHE_DASH_PREFIX) === 0 || k === CACHE_UDH_KEY) {
+              localStorage.removeItem(k);
+            }
+          });
+        } catch (e) {}
+      }
+
+      return origRunBackend(methodName, args, onSuccess, onFailure);
+    };
+  }
+
+  // Trigger fast initial paint as soon as DOM is ready
+  window.addEventListener("DOMContentLoaded", function() {
+    if (typeof renderUdhaarKhata === "function") {
+      try { renderUdhaarKhata(); } catch (e) {}
+    }
+    if (typeof loadData === "function") {
+      try { loadData(); } catch (e) {}
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
