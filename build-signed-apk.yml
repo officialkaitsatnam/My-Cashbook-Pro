@@ -23,15 +23,29 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Capacitor & Sync Android
+      - name: Prepare Web Assets (www) & Icon
+        run: |
+          rm -rf www assets
+          mkdir -p www assets android/app
+          cp index.html www/index.html
+          [ -f manifest.json ] && cp manifest.json www/manifest.json || true
+          [ -f app.js ] && cp app.js www/app.js || true
+          [ -f style.css ] && cp style.css www/style.css || true
+          if [ -f icon.png ]; then
+            cp icon.png www/icon.png
+            cp icon.png assets/icon.png
+            cp icon.png assets/logo.png
+          fi
+
+      - name: Install Dependencies & Sync Android
         run: |
           npm install
           npx cap add android || true
           npx cap sync android
 
-      - name: Apply App Icon & Adaptive Icon from assets/
+      - name: Generate Launcher Icons from assets/icon.png
         run: |
-          npx capacitor-assets generate --android --iconBackgroundColor '#0a2e7a' --splashBackgroundColor '#0a2e7a'
+          npx capacitor-assets generate --android --iconBackgroundColor '#062a78' --splashBackgroundColor '#062a78' || true
 
       - name: Auto-Generate Release Keystore
         run: |
@@ -40,29 +54,33 @@ jobs:
             -storepass Cashbook@2026 -keypass Cashbook@2026 \
             -dname "CN=MyCashbook Pro, OU=App, O=MyCashbook, L=India, S=HR, C=IN"
 
-      - name: Enable Signing & R8 Speed Optimization
+      - name: Configure Release Signing & Version Code in build.gradle
         run: |
-          cat << 'EOF' >> android/app/build.gradle
+          node -e '
+            const fs = require("fs");
+            const gradlePath = "android/app/build.gradle";
+            let gradle = fs.readFileSync(gradlePath, "utf8");
+            const nextCode = Math.floor(Date.now() / 1000) % 2100000000;
+            gradle = gradle.replace(/versionCode\s+\d+/, "versionCode " + nextCode);
 
-          android {
-              signingConfigs {
-                  release {
-                      storeFile file("auto-release.jks")
-                      storePassword "Cashbook@2026"
-                      keyAlias "mycashbook"
-                      keyPassword "Cashbook@2026"
-                  }
-              }
-              buildTypes {
-                  release {
-                      signingConfig signingConfigs.release
-                      minifyEnabled true
-                      shrinkResources true
-                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-                  }
-              }
-          }
-          EOF
+            const signingSnippet = `
+    signingConfigs {
+        release {
+            storeFile file("auto-release.jks")
+            storePassword "Cashbook@2026"
+            keyAlias "mycashbook"
+            keyPassword "Cashbook@2026"
+        }
+    }`;
+            if (!gradle.includes("signingConfigs {")) {
+              gradle = gradle.replace(/android\s*\{/, "android {" + signingSnippet);
+            }
+            gradle = gradle.replace(
+              /buildTypes\s*\{[\s\S]*?release\s*\{/,
+              (match) => match + "\n            signingConfig signingConfigs.release"
+            );
+            fs.writeFileSync(gradlePath, gradle, "utf8");
+          '
 
       - name: Build Signed Release APK
         run: |

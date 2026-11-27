@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b49b8">
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
   <title>My Cashbook — Smart Money & Udhaar Ledger</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1463,6 +1465,368 @@
       }
     }
   </script>
+
+
+<style id="pro-auth-and-compact-v4">
+  #cbLoginGateOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9995;
+    background: linear-gradient(135deg, #051c52 0%, #0b49b8 52%, #1574f2 100%);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    overflow-y: auto;
+  }
+  .cb-login-card {
+    width: 100%;
+    max-width: 395px;
+    background: #ffffff;
+    color: #0f172a;
+    border-radius: 22px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 24px 54px rgba(2, 12, 38, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+  }
+  body.dark-mode .cb-login-card {
+    background: #0f1a2e;
+    color: #f8fafc;
+    border-color: rgba(148, 163, 184, 0.22);
+  }
+  .cb-login-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eff6ff;
+    color: #0b49b8;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 11px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .cb-login-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    object-fit: cover;
+    box-shadow: 0 10px 22px rgba(11, 73, 184, 0.28);
+    border: 2px solid #e2e8f0;
+    margin-bottom: 8px;
+  }
+  .cb-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 12px 0;
+  }
+  .cb-divider::before, .cb-divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .cb-divider span { padding: 0 10px; }
+  .cb-link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0b49b8;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .cb-link-btn:hover { text-decoration: underline; }
+  body.dark-mode .cb-link-btn { color: #60a5fa; }
+
+  /* Compact spacing so more rows/data fit on initial open */
+  .main-workspace { padding: 8px 12px 20px !important; }
+  .top-ribbon { padding: 7px 14px !important; margin-bottom: 8px !important; }
+  .kpi-box { padding: 8px 12px !important; }
+  .kpi-amount { font-size: 17px !important; }
+  .ledger-body-pad { padding: 8px 10px 10px !important; }
+  .ledger-table thead th { padding: 5px 7px !important; font-size: 11.5px !important; }
+  .ledger-table tbody td { padding: 4px 7px !important; font-size: 12px !important; }
+  @media (max-width: 768px) {
+    .main-workspace { padding: 5px 7px 62px !important; }
+    .kpi-box { padding: 6px 7px !important; }
+    .kpi-amount { font-size: 12px !important; }
+    .ledger-table tbody td { padding: 3.5px 5px !important; font-size: 11px !important; }
+  }
+</style>
+
+<div id="cbLoginGateOverlay">
+  <div class="cb-login-card">
+    <div class="text-center mb-2">
+      <div class="cb-login-badge"><i class="fa-solid fa-shield-check"></i> MY CASHBOOK PRO</div>
+      <div><img src="icon.png" alt="My Cashbook Pro Icon" class="cb-login-icon"></div>
+      <h4 id="cbAuthTitle" class="fw-bold m-0" style="font-size:1.25rem;">Sign In to Cashbook</h4>
+      <div id="cbAuthSubtitle" class="small text-muted mt-1">Enter your credentials to continue</div>
+    </div>
+
+    <div id="cbAuthAlert" class="alert alert-danger py-2 px-3 small rounded-3 mt-2 mb-2" style="display:none;"></div>
+
+    <div id="cbGoogleAuthBlock">
+      <div class="d-flex justify-content-center my-2">
+        <div id="cbGoogleBtnContainer"></div>
+      </div>
+      <div class="cb-divider"><span>OR SIGN IN WITH EMAIL</span></div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="cbLoginForm" onsubmit="cbSubmitLogin(event)">
+      <div class="mb-2">
+        <label class="form-label small fw-bold mb-1">Email Address</label>
+        <input type="email" id="cbLoginEmail" class="form-control rounded-3" placeholder="kaitsatnam@gmail.com" required>
+      </div>
+      <div class="mb-2">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label class="form-label small fw-bold m-0">Password</label>
+          <button type="button" class="cb-link-btn" onclick="cbSwitchAuthMode('OTP')">Forgot Password?</button>
+        </div>
+        <input type="password" id="cbLoginPassword" class="form-control rounded-3" placeholder="Enter password" required>
+      </div>
+      <button type="submit" id="cbLoginSubmitBtn" class="btn btn-primary w-100 fw-bold rounded-pill py-2 mt-2">
+        <i class="fa-solid fa-right-to-bracket me-1"></i> Login
+      </button>
+      <div class="text-center mt-3 small text-muted">
+        Don't have an account? <button type="button" class="cb-link-btn" onclick="cbSwitchAuthMode('REGISTER')">Create Account</button>
+      </div>
+    </form>
+
+    <!-- CREATE ACCOUNT FORM -->
+    <form id="cbRegisterForm" onsubmit="cbSubmitRegister(event)" style="display:none;">
+      <div class="mb-2">
+        <label class="form-label small fw-bold mb-1">Full Name</label>
+        <input type="text" id="cbRegName" class="form-control rounded-3" placeholder="Your full name" required>
+      </div>
+      <div class="mb-2">
+        <label class="form-label small fw-bold mb-1">Email Address</label>
+        <input type="email" id="cbRegEmail" class="form-control rounded-3" placeholder="name@example.com" required>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-6">
+          <label class="form-label small fw-bold mb-1">Mobile No.</label>
+          <input type="text" id="cbRegPhone" class="form-control rounded-3" placeholder="Optional">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-bold mb-1">Shop / Business</label>
+          <input type="text" id="cbRegBusiness" class="form-control rounded-3" placeholder="Optional">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-bold mb-1">Create Password</label>
+        <input type="password" id="cbRegPassword" class="form-control rounded-3" placeholder="Minimum 4 characters" required>
+      </div>
+      <button type="submit" id="cbRegSubmitBtn" class="btn btn-success w-100 fw-bold rounded-pill py-2">
+        <i class="fa-solid fa-user-plus me-1"></i> Create Account
+      </button>
+      <div class="text-center mt-3 small text-muted">
+        Already registered? <button type="button" class="cb-link-btn" onclick="cbSwitchAuthMode('LOGIN')">Back to Login</button>
+      </div>
+    </form>
+
+    <!-- FORGOT PASSWORD / 6-DIGIT OTP RESET -->
+    <div id="cbOtpResetForm" style="display:none;">
+      <div class="mb-2">
+        <label class="form-label small fw-bold mb-1">Registered Email</label>
+        <div class="input-group">
+          <input type="email" id="cbOtpEmail" class="form-control" placeholder="kaitsatnam@gmail.com">
+          <button type="button" id="cbSendOtpBtn" class="btn btn-outline-primary fw-bold" onclick="cbSendResetOtp()">Send OTP</button>
+        </div>
+      </div>
+      <form onsubmit="cbSubmitOtpReset(event)">
+        <div class="mb-2">
+          <label class="form-label small fw-bold mb-1">6-Digit OTP</label>
+          <input type="text" id="cbOtpCode" maxlength="6" class="form-control text-center fw-bold rounded-3" placeholder="Enter 6-digit OTP" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold mb-1">New Password</label>
+          <input type="password" id="cbOtpNewPass" class="form-control rounded-3" placeholder="Enter new password" required>
+        </div>
+        <button type="submit" id="cbOtpSubmitBtn" class="btn btn-primary w-100 fw-bold rounded-pill py-2">
+          <i class="fa-solid fa-key me-1"></i> Reset Password
+        </button>
+      </form>
+      <div class="text-center mt-3">
+        <button type="button" class="cb-link-btn" onclick="cbSwitchAuthMode('LOGIN')"><i class="fa-solid fa-arrow-left me-1"></i>Back to Login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var CB_AUTH_KEY = "cb_pro_authenticated_user_v1";
+  var CB_G_CLIENT = "289553047156-7cbvkp2186bpe9r07huq306jmja7lgis.apps.googleusercontent.com";
+
+  window.cbGetSavedAuth = function() {
+    try { return JSON.parse(sessionStorage.getItem(CB_AUTH_KEY) || "null"); } catch (e) { return null; }
+  };
+  window.cbSetSavedAuth = function(u) {
+    try {
+      if (u) sessionStorage.setItem(CB_AUTH_KEY, JSON.stringify(u));
+      else sessionStorage.removeItem(CB_AUTH_KEY);
+    } catch (e) {}
+  };
+  window.cbShowAuthError = function(msg) {
+    var el = document.getElementById("cbAuthAlert");
+    if (!el) return;
+    el.innerText = msg || "";
+    el.style.display = msg ? "block" : "none";
+  };
+  window.cbSwitchAuthMode = function(mode) {
+    window.cbShowAuthError("");
+    document.getElementById("cbLoginForm").style.display = mode === "LOGIN" ? "block" : "none";
+    document.getElementById("cbRegisterForm").style.display = mode === "REGISTER" ? "block" : "none";
+    document.getElementById("cbOtpResetForm").style.display = mode === "OTP" ? "block" : "none";
+    document.getElementById("cbGoogleAuthBlock").style.display = mode === "LOGIN" ? "block" : "none";
+
+    var t = document.getElementById("cbAuthTitle");
+    var s = document.getElementById("cbAuthSubtitle");
+    if (mode === "LOGIN") {
+      if (t) t.innerText = "Sign In to Cashbook";
+      if (s) s.innerText = "Enter your credentials to continue";
+    } else if (mode === "REGISTER") {
+      if (t) t.innerText = "Create Account";
+      if (s) s.innerText = "Register your account to start";
+    } else {
+      if (t) t.innerText = "Forgot Password";
+      if (s) s.innerText = "Send 6-digit OTP to your email & reset";
+    }
+  };
+  window.cbOpenLoginGate = function() {
+    window.cbSwitchAuthMode("LOGIN");
+    var gate = document.getElementById("cbLoginGateOverlay");
+    if (gate) gate.style.display = "flex";
+    window.cbRenderGoogleBtn();
+  };
+  window.cbCloseLoginGateAndStart = function(userObj) {
+    window.cbSetSavedAuth(userObj || { ok: true });
+    var gate = document.getElementById("cbLoginGateOverlay");
+    if (gate) gate.style.display = "none";
+    if (typeof checkInitialPinLock === "function") checkInitialPinLock();
+    if (typeof loadData === "function") loadData();
+    if (typeof syncUdhaarFromCloud === "function") syncUdhaarFromCloud(false);
+  };
+  window.cbRenderGoogleBtn = function() {
+    var box = document.getElementById("cbGoogleBtnContainer");
+    if (!box || !window.google || !google.accounts || !google.accounts.id) return;
+    box.innerHTML = "";
+    google.accounts.id.initialize({
+      client_id: CB_G_CLIENT,
+      callback: function(resp) {
+        var cred = resp && resp.credential ? resp.credential : "";
+        if (!cred) { window.cbShowAuthError("Google credential missing."); return; }
+        runBackend("verifyGoogleLogin", [{ idToken: cred, credential: cred }], function(res) {
+          if (!res || res.ok === false) {
+            window.cbShowAuthError((res && res.error) || "Google Sign-In failed.");
+            return;
+          }
+          window.cbCloseLoginGateAndStart({ idToken: cred, user: res.user || { email: res.email, name: res.name } });
+        }, function(err) {
+          window.cbShowAuthError((err && err.message) || String(err));
+        });
+      }
+    });
+    google.accounts.id.renderButton(box, { theme: "outline", size: "large", width: 320 });
+  };
+  window.cbSubmitLogin = function(e) {
+    e.preventDefault();
+    window.cbShowAuthError("");
+    var email = document.getElementById("cbLoginEmail").value.trim();
+    var pass = document.getElementById("cbLoginPassword").value;
+    var btn = document.getElementById("cbLoginSubmitBtn");
+    if (btn) { btn.disabled = true; btn.innerText = "Signing in..."; }
+    runBackend("loginAccountOnSheet", [email, pass], function(res) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-to-bracket me-1"></i> Login'; }
+      if (!res || res.ok === false) {
+        window.cbShowAuthError((res && res.error) || "Invalid email or password.");
+        return;
+      }
+      window.cbCloseLoginGateAndStart({ user: res.user || { email: email } });
+    }, function(err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-to-bracket me-1"></i> Login'; }
+      window.cbShowAuthError((err && err.message) || String(err));
+    });
+  };
+  window.cbSubmitRegister = function(e) {
+    e.preventDefault();
+    window.cbShowAuthError("");
+    var payload = {
+      name: document.getElementById("cbRegName").value.trim(),
+      email: document.getElementById("cbRegEmail").value.trim(),
+      phone: document.getElementById("cbRegPhone").value.trim(),
+      business: document.getElementById("cbRegBusiness").value.trim(),
+      password: document.getElementById("cbRegPassword").value
+    };
+    var btn = document.getElementById("cbRegSubmitBtn");
+    if (btn) { btn.disabled = true; btn.innerText = "Creating..."; }
+    runBackend("registerAccountOnSheet", [payload], function(res) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-user-plus me-1"></i> Create Account'; }
+      if (!res || res.ok === false) {
+        window.cbShowAuthError((res && res.error) || "Could not create account.");
+        return;
+      }
+      window.cbCloseLoginGateAndStart({ user: res.user || { email: payload.email, name: payload.name } });
+    }, function(err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-user-plus me-1"></i> Create Account'; }
+      window.cbShowAuthError((err && err.message) || String(err));
+    });
+  };
+  window.cbSendResetOtp = function() {
+    window.cbShowAuthError("");
+    var email = document.getElementById("cbOtpEmail").value.trim();
+    if (!email) { window.cbShowAuthError("Please enter registered email first."); return; }
+    var btn = document.getElementById("cbSendOtpBtn");
+    if (btn) { btn.disabled = true; btn.innerText = "Sending..."; }
+    runBackend("sendPasswordResetOtp", [email], function(res) {
+      if (btn) { btn.disabled = false; btn.innerText = "Send OTP"; }
+      if (!res || res.ok === false) {
+        window.cbShowAuthError((res && res.error) || "Failed to send OTP.");
+        return;
+      }
+      alert(res.message || "6-digit OTP sent to your email!");
+    }, function(err) {
+      if (btn) { btn.disabled = false; btn.innerText = "Send OTP"; }
+      window.cbShowAuthError((err && err.message) || String(err));
+    });
+  };
+  window.cbSubmitOtpReset = function(e) {
+    e.preventDefault();
+    window.cbShowAuthError("");
+    var email = document.getElementById("cbOtpEmail").value.trim();
+    var otp = document.getElementById("cbOtpCode").value.trim();
+    var newPass = document.getElementById("cbOtpNewPass").value;
+    var btn = document.getElementById("cbOtpSubmitBtn");
+    if (btn) { btn.disabled = true; btn.innerText = "Updating..."; }
+    runBackend("resetPasswordWithOtp", [email, otp, newPass], function(res) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-key me-1"></i> Reset Password'; }
+      if (!res || res.ok === false) {
+        window.cbShowAuthError((res && res.error) || "OTP reset failed.");
+        return;
+      }
+      alert(res.message || "Password updated successfully! Please login.");
+      window.cbSwitchAuthMode("LOGIN");
+    }, function(err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-key me-1"></i> Reset Password'; }
+      window.cbShowAuthError((err && err.message) || String(err));
+    });
+  };
+
+  window.addEventListener("load", function() {
+    window.cbRenderGoogleBtn();
+    var sess = window.cbGetSavedAuth();
+    if (!sess || !sess.user) {
+      window.cbOpenLoginGate();
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

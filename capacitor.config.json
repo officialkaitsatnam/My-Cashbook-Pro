@@ -1,9 +1,9 @@
 {
   "appId": "com.mycashbook.pro",
-  "appName": "MyCashbook Pro",
+  "appName": "My Cashbook Pro",
   "webDir": "www",
   "android": {
-    "allowMixedContent": false,
+    "allowMixedContent": true,
     "captureInput": true,
     "webContentsDebuggingEnabled": false
   }

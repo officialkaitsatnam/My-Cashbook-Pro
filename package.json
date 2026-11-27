@@ -1,9 +1,9 @@
 {
   "name": "my-cashbook-pro",
   "version": "1.0.0",
-  "description": "My Cashbook Pro Android APK & Web App",
+  "description": "My Cashbook Pro Web & Android APK",
   "scripts": {
-    "build": "echo 'Static web app ready'"
+    "build": "echo 'Ready'"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
