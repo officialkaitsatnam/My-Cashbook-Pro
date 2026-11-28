@@ -258,7 +258,7 @@
         <button type="button" id="navReportsBtn" class="side-nav-btn" onclick="switchView('UDHAAR', 'navReportsBtn')"><i class="fa-solid fa-book-open"></i><span>Udhaar</span></button>
         <button type="button" id="navAnalyticsBtn" class="side-nav-btn" onclick="openChartModal()"><i class="fa-solid fa-chart-pie"></i><span>Analytics</span></button>
         <button type="button" id="navToolsBtn" class="side-nav-btn" onclick="openBudgetModal()"><i class="fa-solid fa-wrench"></i><span>Tools</span></button>
-        <button type="button" id="navSettingsBtn" class="side-nav-btn" onclick="openPinModal()"><i class="fa-solid fa-gear"></i><span>PIN Lock</span></button>
+        <button type="button" id="navProfileBtn" class="side-nav-btn" onclick="openUserProfileModal()"><i class="fa-solid fa-user-shield"></i><span>Profile</span></button>
       </div>
       <div class="text-center">
         <div class="fs-3 text-success"><i class="fa-solid fa-coins text-warning"></i> <i class="fa-solid fa-arrow-trend-up"></i></div>
@@ -430,7 +430,7 @@
         </div>
       </div>
 
-      <div class="footer-ribbon"><i class="fa-solid fa-heart me-1"></i> Smart Cashbook • Simple &amp; Secure</div>
+      <div class="footer-ribbon d-flex flex-wrap justify-content-center align-items-center gap-2"><span>&copy; 2026 <strong>Satnam Kait</strong>. All rights reserved.</span><span class="opacity-50">|</span><span>My Cashbook Pro &bull; Simple &amp; Secure</span></div>
     </main>
   </div>
 
@@ -439,7 +439,7 @@
     <button type="button" onclick="switchView('UDHAAR', 'navReportsBtn')"><i class="fa-solid fa-book-open"></i><span>Udhaar</span></button>
     <button type="button" onclick="openNewEntryModal('CREDIT')" class="btn btn-primary rounded-circle text-white" style="width:42px;height:42px;padding:0;"><i class="fa-solid fa-plus"></i></button>
     <button type="button" onclick="openChartModal()"><i class="fa-solid fa-chart-pie"></i><span>Charts</span></button>
-    <button type="button" onclick="openPinModal()"><i class="fa-solid fa-key"></i><span>PIN</span></button>
+    <button type="button" id="dockProfileBtn" onclick="openUserProfileModal()"><i class="fa-solid fa-user-shield"></i><span>Profile</span></button>
   </nav>
 
   <!-- Add Statement Entry Modal -->
@@ -1691,61 +1691,41 @@
     el.innerText = msg || "";
     el.style.display = msg ? "block" : "none";
   };
-  window.cbSwitchAuthMode = function(mode) {
-    window.cbShowAuthError("");
-    document.getElementById("cbLoginForm").style.display = mode === "LOGIN" ? "block" : "none";
-    document.getElementById("cbRegisterForm").style.display = mode === "REGISTER" ? "block" : "none";
-    document.getElementById("cbOtpResetForm").style.display = mode === "OTP" ? "block" : "none";
-    document.getElementById("cbGoogleAuthBlock").style.display = mode === "LOGIN" ? "block" : "none";
-
-    var t = document.getElementById("cbAuthTitle");
-    var s = document.getElementById("cbAuthSubtitle");
-    if (mode === "LOGIN") {
-      if (t) t.innerText = "Sign In to Cashbook";
-      if (s) s.innerText = "Enter your credentials to continue";
-    } else if (mode === "REGISTER") {
-      if (t) t.innerText = "Create Account";
-      if (s) s.innerText = "Register your account to start";
-    } else {
-      if (t) t.innerText = "Forgot Password";
-      if (s) s.innerText = "Send 6-digit OTP to your email & reset";
+  window.cbTogglePassVis = function(inputId, btnEl) {
+    var inp = document.getElementById(inputId);
+    if (!inp) return;
+    var isPass = inp.type === "password";
+    inp.type = isPass ? "text" : "password";
+    if (btnEl) {
+      btnEl.innerHTML = isPass ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
     }
   };
-  window.cbOpenLoginGate = function() {
-    window.cbSwitchAuthMode("LOGIN");
-    var gate = document.getElementById("cbLoginGateOverlay");
-    if (gate) gate.style.display = "flex";
-    window.cbRenderGoogleBtn();
-  };
-  window.cbCloseLoginGateAndStart = function(userObj) {
-    window.cbSetSavedAuth(userObj || { ok: true });
-    var gate = document.getElementById("cbLoginGateOverlay");
-    if (gate) gate.style.display = "none";
-    if (typeof checkInitialPinLock === "function") checkInitialPinLock();
-    if (typeof loadData === "function") loadData();
-    if (typeof syncUdhaarFromCloud === "function") syncUdhaarFromCloud(false);
-  };
-  window.cbRenderGoogleBtn = function() {
-    var box = document.getElementById("cbGoogleBtnContainer");
-    if (!box || !window.google || !google.accounts || !google.accounts.id) return;
-    box.innerHTML = "";
-    google.accounts.id.initialize({
-      client_id: CB_G_CLIENT,
-      callback: function(resp) {
-        var cred = resp && resp.credential ? resp.credential : "";
-        if (!cred) { window.cbShowAuthError("Google credential missing."); return; }
-        runBackend("verifyGoogleLogin", [{ idToken: cred, credential: cred }], function(res) {
-          if (!res || res.ok === false) {
-            window.cbShowAuthError((res && res.error) || "Google Sign-In failed.");
-            return;
-          }
-          window.cbCloseLoginGateAndStart({ idToken: cred, user: res.user || { email: res.email, name: res.name } });
-        }, function(err) {
-          window.cbShowAuthError((err && err.message) || String(err));
-        });
-      }
-    });
-    google.accounts.id.renderButton(box, { theme: "outline", size: "large", width: 320 });
+  window.cbSwitchAuthMode = function(mode) {
+    window.cbShowAuthError("");
+    var lf = document.getElementById("cbLoginForm");
+    var rf = document.getElementById("cbRegisterForm");
+    var of = document.getElementById("cbOtpResetForm");
+    var gb = document.getElementById("cbGoogleAuthBlock");
+    var t = document.getElementById("cbAuthTitle");
+    var s = document.getElementById("cbAuthSubtitle");
+    var tabL = document.getElementById("cbTabLoginBtn");
+    var tabR = document.getElementById("cbTabRegBtn");
+    if (lf) lf.style.display = mode === "LOGIN" ? "block" : "none";
+    if (rf) rf.style.display = mode === "REGISTER" ? "block" : "none";
+    if (of) of.style.display = mode === "OTP" ? "block" : "none";
+    if (gb) gb.style.display = mode === "OTP" ? "none" : "block";
+    if (tabL) tabL.classList.toggle("active", mode === "LOGIN");
+    if (tabR) tabR.classList.toggle("active", mode === "REGISTER");
+    if (mode === "REGISTER") {
+      if (t) t.innerText = "Create Your Account";
+      if (s) s.innerText = "Sync your Cashbook & Udhaar records securely";
+    } else if (mode === "OTP") {
+      if (t) t.innerText = "Reset Password";
+      if (s) s.innerText = "Verify the 6-digit OTP sent to your email";
+    } else {
+      if (t) t.innerText = "Welcome Back";
+      if (s) s.innerText = "Sign in to manage your Cashbook & Udhaar Khata";
+    }
   };
   window.cbSubmitLogin = function(e) {
     e.preventDefault();
@@ -2165,69 +2145,180 @@
 </script>
 
 
-  <!-- User Profile Modal -->
+  
+
+  <!-- Executive User Profile & 6-Digit PIN Security Modal -->
   <div class="modal fade" id="userProfileModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-circle me-2"></i>User Profile &amp; Account Details</h5>
+        <div class="modal-header text-white border-0" style="background: linear-gradient(135deg, #072261 0%, #0b49b8 100%);">
+          <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+            <i class="fa-solid fa-id-card-clip text-warning"></i>
+            <span>My Profile &amp; Security</span>
+          </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <form id="userProfileForm" onsubmit="saveUserProfileDetails(event)">
-          <div class="modal-body p-4">
-            <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded-3 bg-light border">
-              <img id="profAvatarPreview" src="icon.png" alt="Avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid #0b49b8;">
-              <div class="overflow-hidden">
-                <div id="profDisplayName" class="fw-bold text-dark text-truncate">Satnam Kait</div>
+
+        <div class="modal-body p-0">
+          <!-- Executive Profile Banner -->
+          <div class="p-3 bg-light border-bottom">
+            <div class="d-flex align-items-center gap-3">
+              <div class="position-relative" style="flex-shrink:0;">
+                <img id="profAvatarPreview" src="icon.png" alt="Profile Avatar" style="width:66px;height:66px;border-radius:50%;object-fit:cover;border:3px solid #0b49b8;box-shadow:0 4px 12px rgba(11,73,184,0.2);">
+                <label for="profAvatarFileInput" class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" style="width:24px;height:24px;cursor:pointer;" title="Change Photo">
+                  <i class="fa-solid fa-camera" style="font-size:10px;"></i>
+                </label>
+                <input type="file" id="profAvatarFileInput" accept="image/*" class="d-none" onchange="handleProfileAvatarChange(event)">
+              </div>
+              <div class="flex-grow-1 overflow-hidden">
+                <div class="d-flex align-items-center gap-2">
+                  <h6 id="profDisplayName" class="fw-bold text-dark m-0 text-truncate">Satnam Kait</h6>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:10px;"><i class="fa-solid fa-circle-check me-1"></i>Verified</span>
+                </div>
                 <div id="profDisplayEmail" class="small text-muted text-truncate">kaitsatnam@gmail.com</div>
-                <div id="profDisplayId" class="badge bg-primary-subtle text-primary mt-1" style="font-size:10px;">USR-ACTIVE</div>
+                <div class="d-flex flex-wrap gap-1 mt-1">
+                  <span id="profDisplayId" class="badge bg-primary-subtle text-primary" style="font-size:10px;">USR-ACTIVE</span>
+                  <span id="profPinStatusBadge" class="badge bg-secondary-subtle text-secondary" style="font-size:10px;"><i class="fa-solid fa-lock-open me-1"></i>PIN Off</span>
+                </div>
               </div>
             </div>
 
-            <div class="mb-2">
-              <label class="form-label small fw-bold mb-1">Full Name</label>
-              <input type="text" id="profNameInput" class="form-control form-control-sm" placeholder="Enter full name" required>
-            </div>
-            <div class="row g-2 mb-2">
-              <div class="col-12 col-sm-6">
-                <label class="form-label small fw-bold mb-1">Email Address</label>
-                <input type="email" id="profEmailInput" class="form-control form-control-sm" placeholder="email@example.com" required>
+            <!-- Live Account Snapshot -->
+            <div class="row g-2 mt-2 text-center">
+              <div class="col-4">
+                <div class="bg-white rounded-3 p-2 border">
+                  <div class="text-muted" style="font-size:10px;font-weight:700;">ENTRIES</div>
+                  <div id="profStatEntries" class="fw-bold text-dark" style="font-size:13px;">0</div>
+                </div>
               </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label small fw-bold mb-1">Phone Number</label>
-                <input type="text" id="profPhoneInput" class="form-control form-control-sm" placeholder="+91 XXXXX XXXXX">
+              <div class="col-4">
+                <div class="bg-white rounded-3 p-2 border">
+                  <div class="text-muted" style="font-size:10px;font-weight:700;">NET BALANCE</div>
+                  <div id="profStatBalance" class="fw-bold text-primary" style="font-size:13px;">₹0</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="bg-white rounded-3 p-2 border">
+                  <div class="text-muted" style="font-size:10px;font-weight:700;">UDHAAR</div>
+                  <div id="profStatUdhaar" class="fw-bold text-warning-emphasis" style="font-size:13px;">0</div>
+                </div>
               </div>
             </div>
-            <div class="mb-2">
-              <label class="form-label small fw-bold mb-1">Business / Role</label>
-              <input type="text" id="profBusinessInput" class="form-control form-control-sm" placeholder="Shop / Business / Role">
-            </div>
-            <div class="mb-2">
-              <label class="form-label small fw-bold mb-1">City / Address</label>
-              <input type="text" id="profAddressInput" class="form-control form-control-sm" placeholder="City, State">
-            </div>
-            <div id="profStatusMsg" class="small mt-2"></div>
           </div>
-          <div class="modal-footer bg-light d-flex justify-content-between">
-            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="logoutCurrentUserSession()">
-              <i class="fa-solid fa-right-from-bracket me-1"></i> Sign Out
-            </button>
-            <div class="d-flex gap-2">
-              <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Close</button>
-              <button type="submit" id="profSaveBtn" class="btn btn-primary btn-sm fw-bold rounded-pill px-4">
-                <i class="fa-solid fa-floppy-disk me-1"></i> Save Profile
+
+          <!-- Section Switcher inside Profile -->
+          <div class="px-3 pt-3">
+            <div class="btn-group w-100" role="group">
+              <button type="button" id="profTabDetailsBtn" class="btn btn-primary btn-sm fw-bold" onclick="switchProfileSection('DETAILS')">
+                <i class="fa-solid fa-user-pen me-1"></i> Profile Details
+              </button>
+              <button type="button" id="profTabSecurityBtn" class="btn btn-outline-primary btn-sm fw-bold" onclick="switchProfileSection('SECURITY')">
+                <i class="fa-solid fa-shield-halved me-1"></i> 6-Digit PIN &amp; Security
               </button>
             </div>
           </div>
-        </form>
+
+          <!-- SECTION 1: PROFILE DETAILS -->
+          <div id="profDetailsSection" class="p-3">
+            <form id="userProfileForm" onsubmit="saveUserProfileDetails(event)">
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Full Name</label>
+                <input type="text" id="profNameInput" class="form-control form-control-sm" placeholder="Satnam Kait" required>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-12 col-sm-6">
+                  <label class="form-label small fw-bold mb-1">Email Address</label>
+                  <input type="email" id="profEmailInput" class="form-control form-control-sm" placeholder="kaitsatnam@gmail.com" required>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <label class="form-label small fw-bold mb-1">Phone Number</label>
+                  <input type="text" id="profPhoneInput" class="form-control form-control-sm" placeholder="+91 XXXXX XXXXX">
+                </div>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-12 col-sm-6">
+                  <label class="form-label small fw-bold mb-1">Business / Shop / Role</label>
+                  <input type="text" id="profBusinessInput" class="form-control form-control-sm" placeholder="Business or Role">
+                </div>
+                <div class="col-12 col-sm-6">
+                  <label class="form-label small fw-bold mb-1">City / Address</label>
+                  <input type="text" id="profAddressInput" class="form-control form-control-sm" placeholder="City, State">
+                </div>
+              </div>
+              <div id="profStatusMsg" class="small mt-2"></div>
+              <div class="d-flex justify-content-end gap-2 mt-3">
+                <button type="submit" id="profSaveBtn" class="btn btn-primary btn-sm fw-bold rounded-pill px-4">
+                  <i class="fa-solid fa-floppy-disk me-1"></i> Save Profile Details
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- SECTION 2: 6-DIGIT PIN LOCK & APP PREFERENCES -->
+          <div id="profSecuritySection" class="p-3" style="display:none;">
+            <div class="p-3 rounded-3 border bg-light mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold text-dark small"><i class="fa-solid fa-key text-warning me-1"></i> 6-Digit App PIN Lock</div>
+                <span id="profPinActivePill" class="badge bg-secondary">Not Set</span>
+              </div>
+              <p class="small text-muted mb-2">Protect your Cashbook &amp; Udhaar Khata with a 6-digit PIN every time the app opens.</p>
+              <form onsubmit="saveProfilePinLock(event)">
+                <div class="row g-2 mb-2">
+                  <div class="col-6">
+                    <label class="form-label small fw-bold mb-1">Enter 6-Digit PIN</label>
+                    <input type="password" id="profPinNewInput" maxlength="6" pattern="\d{6}" inputmode="numeric" class="form-control form-control-sm text-center fw-bold" style="letter-spacing:4px;" placeholder="••••••" required>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small fw-bold mb-1">Confirm 6-Digit PIN</label>
+                    <input type="password" id="profPinConfirmInput" maxlength="6" pattern="\d{6}" inputmode="numeric" class="form-control form-control-sm text-center fw-bold" style="letter-spacing:4px;" placeholder="••••••" required>
+                  </div>
+                </div>
+                <div id="profPinMsg" class="small mb-2"></div>
+                <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pt-1">
+                  <div class="d-flex gap-1">
+                    <button type="button" class="btn btn-outline-danger btn-sm fw-bold" onclick="disableProfilePinLock()">
+                      <i class="fa-solid fa-lock-open me-1"></i> Disable PIN
+                    </button>
+                    <button type="button" id="profLockNowBtn" class="btn btn-outline-dark btn-sm fw-bold" onclick="lockAppImmediatelyFromProfile()">
+                      <i class="fa-solid fa-lock me-1"></i> Lock Now
+                    </button>
+                  </div>
+                  <button type="submit" class="btn btn-dark btn-sm fw-bold px-3">
+                    <i class="fa-solid fa-shield-check me-1"></i> Save 6-Digit PIN
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Quick App Preferences & Backup -->
+            <div class="p-3 rounded-3 border bg-white">
+              <div class="fw-bold text-dark small mb-2"><i class="fa-solid fa-sliders text-primary me-1"></i> Quick App Controls</div>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="toggleDarkMode()">
+                  <i class="fa-solid fa-circle-half-stroke me-1"></i> Toggle Dark Mode
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="downloadLocalBackupJson()">
+                  <i class="fa-solid fa-download me-1"></i> Backup Data (JSON)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light d-flex justify-content-between align-items-center py-2">
+          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold" onclick="logoutCurrentUserSession()">
+            <i class="fa-solid fa-right-from-bracket me-1"></i> Sign Out
+          </button>
+          <div class="small text-muted" style="font-size:11px;">&copy; 2026 Satnam Kait</div>
+          <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+        </div>
       </div>
     </div>
   </div>
 
-
-<script id="user-profile-controller-v10">
+<script id="executive-profile-and-pin-v12">
 (function() {
-  var PROFILE_CACHE_KEY = "cb_user_profile_v10";
+  var PROFILE_CACHE_KEY = "cb_user_profile_v12";
 
   function loadStoredProfile() {
     var authUser = (typeof window.cbGetSavedAuth === "function") ? window.cbGetSavedAuth() : null;
@@ -2251,7 +2342,27 @@
     }
   }
 
-  window.openUserProfileModal = function() {
+  function hasActivePin() {
+    var pin = (typeof getSavedPin === "function") ? getSavedPin() : (localStorage.getItem("cashbook_app_pin_v1") || "");
+    return /^\d{6}$/.test(String(pin || "").trim());
+  }
+
+  window.switchProfileSection = function(sec) {
+    var dSec = document.getElementById("profDetailsSection");
+    var sSec = document.getElementById("profSecuritySection");
+    var bDet = document.getElementById("profTabDetailsBtn");
+    var bSec = document.getElementById("profTabSecurityBtn");
+    if (dSec) dSec.style.display = sec === "DETAILS" ? "block" : "none";
+    if (sSec) sSec.style.display = sec === "SECURITY" ? "block" : "none";
+    if (bDet) {
+      bDet.className = sec === "DETAILS" ? "btn btn-primary btn-sm fw-bold" : "btn btn-outline-primary btn-sm fw-bold";
+    }
+    if (bSec) {
+      bSec.className = sec === "SECURITY" ? "btn btn-primary btn-sm fw-bold" : "btn btn-outline-primary btn-sm fw-bold";
+    }
+  };
+
+  window.openUserProfileModal = function(initialTab) {
     var p = loadStoredProfile();
     var setVal = function(id, v) { var el = document.getElementById(id); if (el) el.value = v || ""; };
     var setTxt = function(id, v) { var el = document.getElementById(id); if (el) el.innerText = v || ""; };
@@ -2262,20 +2373,69 @@
     setVal("profBusinessInput", p.business);
     setVal("profAddressInput", p.address);
 
-    setTxt("profDisplayName", p.name || "User");
-    setTxt("profDisplayEmail", p.email || "");
+    setTxt("profDisplayName", p.name || "Satnam Kait");
+    setTxt("profDisplayEmail", p.email || "kaitsatnam@gmail.com");
     setTxt("profDisplayId", p.userId || "USR-ACTIVE");
 
     var av = document.getElementById("profAvatarPreview");
     if (av && p.avatarUrl) av.src = p.avatarUrl;
 
+    // Live dashboard stats snapshot
+    var entriesCount = (typeof allEntries !== "undefined" && Array.isArray(allEntries)) ? allEntries.length : 0;
+    var balText = (document.getElementById("netBalance") || {}).innerText || "₹0";
+    var udhCount = (typeof readUdhaarList === "function") ? readUdhaarList().length : 0;
+    setTxt("profStatEntries", String(entriesCount));
+    setTxt("profStatBalance", balText);
+    setTxt("profStatUdhaar", String(udhCount));
+
+    // Sync PIN fields & badges
+    var active = hasActivePin();
+    var curPin = active ? ((typeof getSavedPin === "function") ? getSavedPin() : (localStorage.getItem("cashbook_app_pin_v1") || "")) : "";
+    setVal("profPinNewInput", curPin);
+    setVal("profPinConfirmInput", curPin);
+    var pBadge = document.getElementById("profPinStatusBadge");
+    var pPill = document.getElementById("profPinActivePill");
+    if (pBadge) {
+      pBadge.className = active ? "badge bg-success-subtle text-success" : "badge bg-secondary-subtle text-secondary";
+      pBadge.innerHTML = active ? '<i class="fa-solid fa-lock me-1"></i>6-Digit PIN On' : '<i class="fa-solid fa-lock-open me-1"></i>PIN Off';
+    }
+    if (pPill) {
+      pPill.className = active ? "badge bg-success" : "badge bg-secondary";
+      pPill.innerText = active ? "PIN Enabled" : "Not Set";
+    }
+
     var st = document.getElementById("profStatusMsg");
     if (st) st.innerHTML = "";
+    var pMsg = document.getElementById("profPinMsg");
+    if (pMsg) pMsg.innerHTML = "";
+
+    window.switchProfileSection(initialTab || "DETAILS");
 
     var modalEl = document.getElementById("userProfileModal");
     if (modalEl && window.bootstrap && bootstrap.Modal) {
       bootstrap.Modal.getOrCreateInstance(modalEl).show();
     }
+  };
+
+  // Redirect any legacy openPinModal() call directly to the Profile Security tab
+  window.openPinModal = function() {
+    window.openUserProfileModal("SECURITY");
+  };
+
+  window.handleProfileAvatarChange = function(ev) {
+    var file = ev && ev.target && ev.target.files && ev.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl = e.target && e.target.result;
+      if (!dataUrl) return;
+      var p = loadStoredProfile();
+      p.avatarUrl = dataUrl;
+      saveStoredProfile(p);
+      var av = document.getElementById("profAvatarPreview");
+      if (av) av.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   window.saveUserProfileDetails = function(ev) {
@@ -2288,25 +2448,115 @@
     p.address = (document.getElementById("profAddressInput").value || "").trim();
 
     saveStoredProfile(p);
-    refreshProfileTriggerBadge();
+    var dispName = document.getElementById("profDisplayName");
+    var dispEmail = document.getElementById("profDisplayEmail");
+    if (dispName) dispName.innerText = p.name || "Satnam Kait";
+    if (dispEmail) dispEmail.innerText = p.email || "kaitsatnam@gmail.com";
 
     var st = document.getElementById("profStatusMsg");
-    if (st) st.innerHTML = "<span class='text-success fw-bold'>Profile saved locally. Syncing to sheet...</span>";
+    if (st) st.innerHTML = "<span class='text-success fw-bold'>Saving profile...</span>";
 
     if (typeof runBackend === "function") {
       runBackend("updateUserProfileOnSheet", [p], function(res) {
         if (st) {
           if (res && res.ok) {
             if (res.user) saveStoredProfile(Object.assign({}, p, res.user));
-            st.innerHTML = "<span class='text-success fw-bold'><i class='fa-solid fa-check me-1'></i>Profile synced to Google Sheet.</span>";
+            st.innerHTML = "<span class='text-success fw-bold'><i class='fa-solid fa-check-circle me-1'></i>Profile updated &amp; synced to Google Sheet!</span>";
           } else {
-            st.innerHTML = "<span class='text-warning fw-semibold'>Saved locally (" + ((res && res.error) || "offline/sync skipped") + ").</span>";
+            st.innerHTML = "<span class='text-success fw-bold'><i class='fa-solid fa-check me-1'></i>Profile saved locally.</span>";
           }
         }
       }, function() {
-        if (st) st.innerHTML = "<span class='text-warning fw-semibold'>Saved locally. Will sync when online.</span>";
+        if (st) st.innerHTML = "<span class='text-success fw-bold'><i class='fa-solid fa-check me-1'></i>Profile saved locally.</span>";
       });
     }
+  };
+
+  window.saveProfilePinLock = function(ev) {
+    if (ev && ev.preventDefault) ev.preventDefault();
+    var p1 = (document.getElementById("profPinNewInput").value || "").trim();
+    var p2 = (document.getElementById("profPinConfirmInput").value || "").trim();
+    var msgEl = document.getElementById("profPinMsg");
+    if (!/^\d{6}$/.test(p1)) {
+      if (msgEl) msgEl.innerHTML = "<span class='text-danger fw-bold'>Please enter a valid 6-digit numeric PIN.</span>";
+      return;
+    }
+    if (p1 !== p2) {
+      if (msgEl) msgEl.innerHTML = "<span class='text-danger fw-bold'>Both 6-digit PIN fields must match.</span>";
+      return;
+    }
+    var key = (typeof PIN_STORAGE_KEY !== "undefined") ? PIN_STORAGE_KEY : "cashbook_app_pin_v1";
+    try { localStorage.setItem(key, p1); } catch (e) {}
+    if (msgEl) msgEl.innerHTML = "<span class='text-success fw-bold'><i class='fa-solid fa-shield-check me-1'></i>6-Digit PIN saved and activated!</span>";
+    var pBadge = document.getElementById("profPinStatusBadge");
+    var pPill = document.getElementById("profPinActivePill");
+    if (pBadge) {
+      pBadge.className = "badge bg-success-subtle text-success";
+      pBadge.innerHTML = '<i class="fa-solid fa-lock me-1"></i>6-Digit PIN On';
+    }
+    if (pPill) {
+      pPill.className = "badge bg-success";
+      pPill.innerText = "PIN Enabled";
+    }
+    if (typeof showAlert === "function") showAlert("6-Digit PIN Lock enabled!");
+  };
+
+  window.disableProfilePinLock = function() {
+    var key = (typeof PIN_STORAGE_KEY !== "undefined") ? PIN_STORAGE_KEY : "cashbook_app_pin_v1";
+    try { localStorage.removeItem(key); } catch (e) {}
+    var i1 = document.getElementById("profPinNewInput");
+    var i2 = document.getElementById("profPinConfirmInput");
+    if (i1) i1.value = "";
+    if (i2) i2.value = "";
+    var msgEl = document.getElementById("profPinMsg");
+    if (msgEl) msgEl.innerHTML = "<span class='text-warning-emphasis fw-bold'>6-Digit PIN Lock disabled.</span>";
+    var pBadge = document.getElementById("profPinStatusBadge");
+    var pPill = document.getElementById("profPinActivePill");
+    if (pBadge) {
+      pBadge.className = "badge bg-secondary-subtle text-secondary";
+      pBadge.innerHTML = '<i class="fa-solid fa-lock-open me-1"></i>PIN Off';
+    }
+    if (pPill) {
+      pPill.className = "badge bg-secondary";
+      pPill.innerText = "Not Set";
+    }
+    if (typeof showAlert === "function") showAlert("PIN lock disabled.");
+  };
+
+  window.lockAppImmediatelyFromProfile = function() {
+    if (!hasActivePin()) {
+      var msgEl = document.getElementById("profPinMsg");
+      if (msgEl) msgEl.innerHTML = "<span class='text-danger fw-bold'>Please save a 6-digit PIN first before locking.</span>";
+      return;
+    }
+    var modalEl = document.getElementById("userProfileModal");
+    if (modalEl && window.bootstrap && bootstrap.Modal) {
+      var inst = bootstrap.Modal.getInstance(modalEl);
+      if (inst) inst.hide();
+    }
+    var lockOverlay = document.getElementById("pinLockOverlay");
+    if (lockOverlay) lockOverlay.style.display = "flex";
+  };
+
+  window.downloadLocalBackupJson = function() {
+    try {
+      var payload = {
+        exportedAt: new Date().toISOString(),
+        owner: "Satnam Kait",
+        profile: loadStoredProfile(),
+        ledgerEntries: (typeof allEntries !== "undefined") ? allEntries : [],
+        udhaarEntries: (typeof readUdhaarList === "function") ? readUdhaarList() : []
+      };
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "My-Cashbook-Pro-Backup-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {}
   };
 
   window.logoutCurrentUserSession = function() {
@@ -2319,56 +2569,8 @@
     var gate = document.getElementById("cbLoginGateOverlay");
     if (gate) gate.style.display = "flex";
   };
-
-  function refreshProfileTriggerBadge() {
-    var p = loadStoredProfile();
-    var sideRail = document.querySelector(".side-rail");
-    if (sideRail && !document.getElementById("navProfileBtn")) {
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.id = "navProfileBtn";
-      btn.className = "side-nav-btn";
-      btn.title = "User Profile";
-      btn.innerHTML = '<i class="fa-solid fa-user"></i><span>Profile</span>';
-      btn.onclick = function() { window.openUserProfileModal(); };
-      var firstGroup = sideRail.querySelector("div");
-      if (firstGroup) firstGroup.appendChild(btn);
-    }
-
-    var dock = document.querySelector(".mobile-dock");
-    if (dock && !document.getElementById("dockProfileBtn")) {
-      var mBtn = document.createElement("button");
-      mBtn.type = "button";
-      mBtn.id = "dockProfileBtn";
-      mBtn.innerHTML = '<i class="fa-solid fa-user"></i><span>Profile</span>';
-      mBtn.onclick = function() { window.openUserProfileModal(); };
-      dock.appendChild(mBtn);
-    }
-
-    var badge = document.getElementById("headerUserChip");
-    var label = (p.name || "User") + (p.email ? " (" + p.email + ")" : "");
-    if (!badge) {
-      var footerRibbon = document.querySelector(".footer-ribbon");
-      if (footerRibbon) {
-        var chip = document.createElement("button");
-        chip.type = "button";
-        chip.id = "headerUserChip";
-        chip.className = "btn btn-sm btn-link text-decoration-none p-0 ms-2 fw-semibold";
-        chip.style.fontSize = "11px";
-        chip.innerHTML = '<i class="fa-solid fa-user-check me-1"></i>' + label;
-        chip.onclick = function() { window.openUserProfileModal(); };
-        footerRibbon.appendChild(chip);
-      }
-    } else {
-      badge.innerHTML = '<i class="fa-solid fa-user-check me-1"></i>' + label;
-    }
-  }
-
-  window.addEventListener("DOMContentLoaded", function() {
-    refreshProfileTriggerBadge();
-  });
 })();
 </script>
-
 </body>
 </html>
+
